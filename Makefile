@@ -2,7 +2,7 @@
 SERVER_NAME = jgc-api
 SERVER_VERSION = 0.1
 CONTAINER_NAME = JGC-API
-PORT = 8188
+PORT = 8806
 
 # 콘솔 색 관련 세팅입니다.
 # 아래와 같이 사용하면 됩니다.

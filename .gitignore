@@ -1,0 +1,6 @@
+# log file
+*.log
+
+# secret data file
+config/**
+!config/config.go

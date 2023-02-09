@@ -30,7 +30,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    -name: test
+    - name: test
       run: echo "No Tests"
   
   upload:

@@ -26,7 +26,6 @@ run-product:
 	@docker run \
 		--platform linux/x86_64 \
 		--name $(CONTAINER_NAME) \
-		--network $(DOCKER_NETWORK) \
 		--restart always \
 		-it -d -p $(PORT):$(PORT) \
 		$(SERVER_NAME):$(SERVER_VERSION) \
@@ -39,7 +38,6 @@ run-test:
 	@docker run \
 		--platform linux/x86_64 \
 		--name $(CONTAINER_NAME) \
-		--network $(DOCKER_NETWORK) \
 		--restart always \
 		-it -d -p $(PORT):$(PORT) \
 		$(SERVER_NAME):$(SERVER_VERSION) \
@@ -51,7 +49,6 @@ migrate-product:
 	@echo "$(PREFIX) Migrate Product DB..."
 	@docker run \
 		--platform linux/x86_64 \
-		--network $(DOCKER_NETWORK) \
 		--rm -it -d \
 		$(SERVER_NAME):$(SERVER_VERSION) \
 			-env product \
@@ -62,7 +59,6 @@ migrate-test:
 	@echo "$(PREFIX) Migrate Test DB..."
 	@docker run \
 		--platform linux/x86_64 \
-		--network $(DOCKER_NETWORK) \
 		--rm -it -d \
 		$(SERVER_NAME):$(SERVER_VERSION) \
 			-env test \
@@ -86,13 +82,20 @@ serve:
 stop:
 	@echo "$(PREFIX) Stopping api server..."
 	@docker stop \
-		$(CONTAINER_NAME)
+		$(shell docker ps -aqf "name=$(CONTAINER_NAME)")
 	@echo "$(PREFIX) Success stopping api server."
 .PHONY: stop
 
 DANGLING_IMAGE = $(shell docker images -f dangling=true -q)
 API_IMAGE = $(shell docker images --filter=reference="jgc-api" -q)
 clean:
+	@echo "$(PREFIX) Remove api server..."
+ifneq ($(shell docker ps -aqf "name=$(CONTAINER_NAME)"),)
+	@docker rm -f \
+		$(shell docker ps -aqf "name=$(CONTAINER_NAME)")
+endif
+	@echo "$(PREFIX) Success Removing api server."
+
 	@echo "$(PREFIX) Removing dangling images..."
 ifneq ($(DANGLING_IMAGE),)
 	@docker rmi $(DANGLING_IMAGE)

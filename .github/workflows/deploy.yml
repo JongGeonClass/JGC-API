@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: install default .env
-      run: echo ${{ secrets.DOT_ENV_DEFAULT }} > ./config/.env.default.env
+      run: echo "${{ secrets.DOT_ENV_DEFAULT }}" > ./config/.env.default.env
     
     - name: install product .env
-      run: echo ${{ secrets.DOT_ENV_PRODUCT }} > ./config/.env.product.env
+      run: echo "${{ secrets.DOT_ENV_PRODUCT }}" > ./config/.env.product.env
 
   build:
     needs: preset

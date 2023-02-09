@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/JongGeonClass/JGC-API/config"
 	"github.com/JongGeonClass/JGC-API/database"
@@ -17,13 +18,14 @@ import (
 func main() {
 	// 환경 분석을 위해 플래그를 파싱합니다.
 	// 기본 플래그는 로컬입니다.
-	envp := flag.String("env", "native", "Environment\n- native\n- test\n- product\n")
+	envPath := flag.String("env_path", "", "Environment's Parent Folder path")
+	envp := flag.String("env", "native", "Environment\n- native.env\n- test.env\n- product.env\n")
 	isMigrate := flag.Bool("migrate", false, "Migrate database")
 	flag.Parse()
 
 	// config file을 초기화 합니다. 이때 rn logger를 사용하는데 초기화 하지 않았으므로,
 	// 에러 로그가 파일로 저장되지 않습니다.
-	config.Init(*envp)
+	config.Init(filepath.Join(*envPath, ".env.default.env"), filepath.Join(*envPath, *envp))
 
 	conf := config.Get()
 

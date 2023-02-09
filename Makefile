@@ -29,7 +29,8 @@ run-product:
 		--restart always \
 		-it -d -p $(PORT):$(PORT) \
 		$(SERVER_NAME):$(SERVER_VERSION) \
-			-env product
+			-env .env.product.env \
+			-env_path /jgc/config
 	@echo "$(PREFIX) Success running api server image."
 .PHONY: run-product
 
@@ -41,7 +42,8 @@ run-test:
 		--restart always \
 		-it -d -p $(PORT):$(PORT) \
 		$(SERVER_NAME):$(SERVER_VERSION) \
-			-env test
+			-env .env.test.env \
+			-env_path /jgc/config
 	@echo "$(PREFIX) Success running api server image."
 .PHONY: run-test-product
 
@@ -51,7 +53,8 @@ migrate-product:
 		--platform linux/x86_64 \
 		--rm -it -d \
 		$(SERVER_NAME):$(SERVER_VERSION) \
-			-env product \
+			-env .env.product.env \
+			-env_path /jgc/config \
 			-migrate
 .PHONY: migrate-product
 
@@ -61,21 +64,24 @@ migrate-test:
 		--platform linux/x86_64 \
 		--rm -it -d \
 		$(SERVER_NAME):$(SERVER_VERSION) \
-			-env test \
+			-env .env.test.env \
+			-env_path /jgc/config \
 			-migrate
 .PHONY: migrate-test
 
 migrate-local:
 	@echo "$(PREFIX) Migrate Native DB..."
 	@go run main.go \
-		-env native \
+		-env .env.native.env \
+		-env_path $(PWD)/config \
 		-migrate
 .PHONY: migrate-local
 
 serve:
 	@echo "$(PREFIX) Running api server..."
 	@go run main.go \
-		-env native
+		-env .env.native.env \
+		-env_path $(PWD)/config
 	@echo "$(PREFIX) Success running api server."
 .PHONY: serve
 

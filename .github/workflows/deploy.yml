@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [ closed ]
+    branches: [ main ]
+  
+  workflow_dispatch:
+
+jobs:
+  preset:
+    runs-on: ubuntu-latest
+    steps:
+    -name: install default .env
+      run: cat ${{ secrets.DOT_ENV_DEFAULT }} >> ./config/.env.default.env
+    
+    -name: install product .env
+      run: cat ${{ secrets.DOT_ENV_PRODUCT }} >> ./config/.env.product.env
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout release
+      uses: actions/checkout@v3
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    -name: test
+      run: echo "No Tests"
+  
+  upload:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clean temp directory
+      run: |
+        rm -rf *
+        cp -r $GITHUB_WORKSPACE .
+    
+    - name: archive jgc_api
+      run: tar cvfz ./jgc_api.tar.gz *
+      
+    - name: AWS configure credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: ap-northeast-2
+        
+    - name: upload to S3
+      run: aws s3 cp --region ap-northeast-2 ./jgc_api.tar.gz s3://jgcdeploy
+  
+  deploy:
+    needs: upload
+    runs-on: ubuntu-latest
+    steps:
+    - name: deploy with AWS codeDeploy
+      run: aws deploy create-deployment
+        --application-name github-action
+        --deployment-group-name github-action-group
+        --file-exists-behavior OVERWRITE
+        --s3-location bucket=jgcdeploy,bundleType=tgz,key=jgc_api.tar.gz
+        --region ap-northeast-2

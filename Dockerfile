@@ -24,6 +24,9 @@ RUN apk add gcompat
 # working directory 생성
 RUN mkdir -p /jgc
 
+# .env 파일 복사
+ADD ./config/*.env /jgc/config/
+
 # 서버 실행파일 복사
 COPY --from=builder /src/JGC-API /jgc/JGC-API
 

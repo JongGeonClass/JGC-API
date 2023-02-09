@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  preset:
+  deploy:
     runs-on: ubuntu-latest
     steps:
     - name: checkout release
@@ -21,28 +21,8 @@ jobs:
         echo "${{ secrets.DOT_ENV_DEFAULT }}" > $GITHUB_WORKSPACE/config/.env.default.env
         echo "${{ secrets.DOT_ENV_PRODUCT }}" > $GITHUB_WORKSPACE/config/.env.product.env
 
-
-  # build:
-  #   needs: preset
-  #   runs-on: ubuntu-latest
-  #   steps:
-    
-
-  test:
-    # needs: build
-    needs: preset
-    runs-on: ubuntu-latest
-    steps:
     - name: test
       run: echo "No Tests"
-  
-
-  upload:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - name: checkout release
-      uses: actions/checkout@v3
     
     - name: archive jgc_api
       run: tar cvfz $GITHUB_WORKSPACE/jgc_api.tar.gz *
@@ -57,11 +37,6 @@ jobs:
     - name: upload to S3
       run: aws s3 cp --region ap-northeast-2 $GITHUB_WORKSPACE/jgc_api.tar.gz s3://jgcdeploy
   
-
-  deploy:
-    needs: upload
-    runs-on: ubuntu-latest
-    steps:
     - name: deploy with AWS codeDeploy
       run: aws deploy create-deployment
         --application-name github-action

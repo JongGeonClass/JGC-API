@@ -43,14 +43,9 @@ jobs:
     steps:
     - name: checkout release
       uses: actions/checkout@v3
-      
-    - name: Clean temp directory
-      run: |
-        rm -rf *
-        cp -r $GITHUB_WORKSPACE .
     
     - name: archive jgc_api
-      run: tar cvfz ./jgc_api.tar.gz *
+      run: tar cvfz $GITHUB_WORKSPACE/jgc_api.tar.gz *
       
     - name: AWS configure credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -60,7 +55,7 @@ jobs:
         aws-region: ap-northeast-2
         
     - name: upload to S3
-      run: aws s3 cp --region ap-northeast-2 ./jgc_api.tar.gz s3://jgcdeploy
+      run: aws s3 cp --region ap-northeast-2 $GITHUB_WORKSPACE/jgc_api.tar.gz s3://jgcdeploy
   
 
   deploy:

@@ -13,13 +13,14 @@ jobs:
   preset:
     runs-on: ubuntu-latest
     steps:
-    -name: install default .env
+    - name: install default .env
       run: cat ${{ secrets.DOT_ENV_DEFAULT }} >> ./config/.env.default.env
     
-    -name: install product .env
+    - name: install product .env
       run: cat ${{ secrets.DOT_ENV_PRODUCT }} >> ./config/.env.product.env
 
   build:
+    needs: preset
     runs-on: ubuntu-latest
     steps:
     - name: checkout release

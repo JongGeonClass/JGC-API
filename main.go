@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/JongGeonClass/JGC-API/config"
+	"github.com/JongGeonClass/JGC-API/database"
 	"github.com/JongGeonClass/JGC-API/migrate"
 	"github.com/JongGeonClass/JGC-API/router"
 	"github.com/JongGeonClass/JGC-API/util"
@@ -60,7 +61,9 @@ func main() {
 		return
 	}
 
-	router := router.New()
+	router := router.New(
+		database.NewUser(db),
+	)
 
 	rnlog.Info("JGC API server is running...")
 	rnlog.Info("Server port: %d", conf.Port)

@@ -2,6 +2,7 @@
 SERVER_NAME = jgc-api
 SERVER_VERSION = 0.1
 CONTAINER_NAME = JGC-API
+DOCKER_NETWORK = jgc-net
 PORT = 8806
 
 # 콘솔 색 관련 세팅입니다.
@@ -39,6 +40,7 @@ run-test:
 	@docker run \
 		--platform linux/x86_64 \
 		--name $(CONTAINER_NAME) \
+		--network $(DOCKER_NETWORK) \
 		--restart always \
 		-it -d -p $(PORT):$(PORT) \
 		$(SERVER_NAME):$(SERVER_VERSION) \
@@ -62,6 +64,7 @@ migrate-test:
 	@echo "$(PREFIX) Migrate Test DB..."
 	@docker run \
 		--platform linux/x86_64 \
+		--network $(DOCKER_NETWORK) \
 		--rm -it -d \
 		$(SERVER_NAME):$(SERVER_VERSION) \
 			-env .env.test.env \

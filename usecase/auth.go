@@ -11,7 +11,7 @@ import (
 
 // Auth Usecase의 인터페이스입니다.
 type AuthUsecase interface {
-	SignUp(ctx context.Context, nickname, username, password string) (int64, error)
+	SignUp(ctx context.Context, email, nickname, username, password string) (int64, error)
 	Login(ctx context.Context, username, password string) (string, error)
 }
 
@@ -24,8 +24,9 @@ type AuthUC struct {
 // 리턴 타입의 int64는 생성된 유저의 id입니다.
 // 만약 이미 존재하는 닉네임을 가진 유저라면 -1을 반환합니다.
 // 만약 이미 존재하는 아이디(유저네임)을 가진 유저라면 -2를 반환합니다.
-func (uc *AuthUC) SignUp(ctx context.Context, nickname, username, password string) (int64, error) {
+func (uc *AuthUC) SignUp(ctx context.Context, email, nickname, username, password string) (int64, error) {
 	user := &dbmodel.User{
+		Email:    email,
 		Nickname: nickname,
 		Username: username,
 		Password: password,

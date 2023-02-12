@@ -6,9 +6,10 @@ import (
 	"github.com/thak1411/gorn"
 )
 
-// 유저의 타입입니다.
+// 유저 정보를 담은 테이블입니다.
 type User struct {
 	Id          int64     `rnsql:"id"  rntype:"INT"  rnopt:"PK NN UQ AI"  json:"id"`
+	Email       string    `rnsql:"email"  rntype:"VARCHAR(200)"  rnopt:"NN"  json:"email"`
 	Nickname    string    `rnsql:"nickname"  rntype:"VARCHAR(30)"  rnopt:"NN"  json:"nickname"`
 	Username    string    `rnsql:"username"  rntype:"VARCHAR(30)"  rnopt:"NN"  json:"username"`
 	Password    string    `rnsql:"password"  rntype:"VARCHAR(512)"  rnopt:"NN"  json:"password"`

@@ -22,15 +22,22 @@ func (h *AuthHandler) SignUp(c *gorn.Context) {
 		Code int `json:"code"`
 	}
 	type Body struct { // Body 파라미터 타입
+		Email    string `json:"email"`
 		Nickname string `json:"nickname"`
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
-	//TODO: 정규식을 제대로 작성해야 합니다.
 	reg := []string{
-		"^.*$", // Nickname Regex
-		"^.*$", // Username Regex
-		"^.*$", // Password Regex
+		"^.+@.+\\..+$",             // Email Regex
+		"^[a-zA-Z0-9ㄱ-ㅎ가-힣-ㅏ-ㅣ]+$", // Nickname Regex
+		"^[a-zA-Z0-9]+$",           // Username Regex
+		"^[a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\+\\=\\[\\]\\{\\}\\.\\,\\<\\>\\/\\?\\;\\:\\'\\\"\\\\\\|\\`]+$", // Password Regex
+	}
+	lenLR := [][]int{
+		{1, 100}, // Email Length
+		{4, 30},  // Nickname Length
+		{6, 30},  // Username Length
+		{6, 30},  // Password Length
 	}
 	// 만약 비밀번호 길이 등 입력 제한 사항이 바뀌었다면 로그인 시 정규식 체크에서 혼란이 생기지 않도록 조심해야 합니다.
 	res := &Response{8000}
@@ -38,8 +45,14 @@ func (h *AuthHandler) SignUp(c *gorn.Context) {
 	if err := c.BindJsonBody(body); err != nil { // 바디 바인딩
 		return
 	}
-	// Check Regex for Nickname, Username, Password
-	for i, v := range []string{body.Nickname, body.Username, body.Password} {
+	bodyItems := []string{body.Email, body.Nickname, body.Username, body.Password}
+	for i, v := range bodyItems {
+		if err := c.AssertStrLen(v, lenLR[i][0], lenLR[i][1]); err != nil {
+			return
+		}
+	}
+	// Check Regex for Email, Nickname, Username, Password
+	for i, v := range bodyItems {
 		if err := c.AssertStrRegex(v, reg[i]); err != nil {
 			return
 		}
@@ -47,7 +60,7 @@ func (h *AuthHandler) SignUp(c *gorn.Context) {
 
 	// 회원 가입 로직을 실행합니다.
 	ctx := c.GetContext()
-	userId, err := h.uc.SignUp(ctx, body.Nickname, body.Username, body.Password)
+	userId, err := h.uc.SignUp(ctx, body.Email, body.Nickname, body.Username, body.Password)
 	if err != nil {
 		rnlog.Error("SignUp error: %+v", err)
 		c.SendInternalServerError()

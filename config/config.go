@@ -50,7 +50,7 @@ func getEnvInt(key string) int {
 // 메인에서 최초 한 번만 호출되어야 합니다.
 func Init(env ...string) {
 	if err := godotenv.Overload(env...); err != nil {
-		rnlog.Error("Envfile Loading Error: ", err)
+		rnlog.Error("Envfile Loading Error: %v", err)
 	}
 
 	config = &Config{}

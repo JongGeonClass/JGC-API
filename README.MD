@@ -76,7 +76,7 @@ JongGeon Class 의 API를 제공하는 서버입니다.
 ### Run Api Server
 
 ~~~shell
- $ make run
+ $ make run-test
 ~~~
 
 도커를 사용하지 않을 경우 아래와 같이 실행해 주세요

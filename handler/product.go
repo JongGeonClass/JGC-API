@@ -17,11 +17,12 @@ type ProductHandler struct {
 // 상품 리스트 조회하기
 func (h *ProductHandler) GetProducts(c *gorn.Context) {
 	type Response struct { // 반환 타입
-		Code     int                      `json:"code"`
-		Products []*dbmodel.PublicProduct `json:"products"`
+		Code        int                      `json:"code"`
+		Products    []*dbmodel.PublicProduct `json:"products"`
+		MaxPagesize int                      `json:"max_pagesize"`
 	}
 	ctx := c.GetContext()
-	res := &Response{8000, nil}
+	res := &Response{8000, nil, 1}
 
 	page := c.GetParamInt("page", 0) // 검색할 페이지 번호를 가져옵니다.
 	if err := c.Assert(page >= 0, "page must be greater than or equal to 0"); err != nil {
@@ -33,13 +34,14 @@ func (h *ProductHandler) GetProducts(c *gorn.Context) {
 	}
 
 	// 상품 리스트를 가져옵니다.
-	products, err := h.uc.GetProducts(ctx, page, pagesize)
+	products, maxPagesize, err := h.uc.GetProducts(ctx, page, pagesize)
 	if err != nil {
 		rnlog.Error("products get error: %+v", err)
 		c.SendInternalServerError()
 		return
 	}
 	res.Products = products
+	res.MaxPagesize = maxPagesize
 	c.SendJson(http.StatusOK, res)
 }
 

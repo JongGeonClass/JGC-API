@@ -12,6 +12,7 @@ import (
 type ProductDatabase interface {
 	ExecTx(ctx context.Context, fn func(txdb ProductDatabase) error) error
 	GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, error)
+	GetProductsCount(ctx context.Context) (int, error)
 }
 
 // 상품 디비의 구현체입니다.
@@ -59,6 +60,22 @@ func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize int) ([]*dbm
 		return nil, err
 	}
 	return result, nil
+}
+
+// 상품 개수를 가져옵니다.
+func (h *ProductDB) GetProductsCount(ctx context.Context) (int, error) {
+	type ProductsCount struct {
+		Count int `rnsql:"COUNT(*)"`
+	}
+	result := &ProductsCount{}
+	sql := gorn.NewSql().
+		Select(result).
+		From("PRODUCT")
+	row := h.QueryRow(ctx, sql)
+	if err := h.ScanRow(row, result); err != nil {
+		return 0, err
+	}
+	return result.Count, nil
 }
 
 // 새로운 디비 객체를 연결합니다.

@@ -36,8 +36,8 @@ func (h *AuthHandler) SignUp(c *gorn.Context) {
 	lenLR := [][]int{
 		{1, 100}, // Email Length
 		{4, 30},  // Nickname Length
-		{6, 30},  // Username Length
-		{6, 30},  // Password Length
+		{4, 30},  // Username Length
+		{4, 30},  // Password Length
 	}
 	// 만약 비밀번호 길이 등 입력 제한 사항이 바뀌었다면 로그인 시 정규식 체크에서 혼란이 생기지 않도록 조심해야 합니다.
 	res := &Response{8000}
@@ -91,8 +91,8 @@ func (h *AuthHandler) Login(c *gorn.Context) {
 		"^[a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\+\\=\\[\\]\\{\\}\\.\\,\\<\\>\\/\\?\\;\\:\\'\\\"\\\\\\|\\`]+$", // Password Regex
 	}
 	lenLR := [][]int{
-		{6, 30}, // Username Length
-		{6, 30}, // Password Length
+		{4, 30}, // Username Length
+		{4, 30}, // Password Length
 	}
 	res := &Response{8000, ""}
 	conf := config.Get()

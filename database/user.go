@@ -13,6 +13,7 @@ import (
 type UserDatabase interface {
 	ExecTx(ctx context.Context, fn func(txdb UserDatabase) error) error
 	AddUser(ctx context.Context, user *dbmodel.User) (int64, error)
+	DeleteAllUsers(ctx context.Context) error
 	UpdateUser(ctx context.Context, user *dbmodel.User) error
 	CheckUserExistsByUsername(ctx context.Context, username string) (bool, error)
 	CheckUserExistsByNickname(ctx context.Context, nickname string) (bool, error)
@@ -54,6 +55,21 @@ func (h *UserDB) AddUser(ctx context.Context, user *dbmodel.User) (int64, error)
 	user.CreatedTime = ntime
 	user.UpdatedTime = ntime
 	return h.InsertWithLastId(ctx, "USER", user)
+}
+
+// 모든 유저를 삭제합니다.
+func (h *UserDB) DeleteAllUsers(ctx context.Context) error {
+	sql := gorn.NewSql().
+		DeleteFrom("USER").
+		Where("id > ?", -1)
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // 유저를 수정합니다.

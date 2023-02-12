@@ -86,11 +86,13 @@ func (h *AuthHandler) Login(c *gorn.Context) {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
-	//TODO: 정규식을 제대로 작성해야 합니다.
 	reg := []string{
-		"^.*$", // Username Regex
-		"^.*$", // Password Regex
-		// 비밀번호 정규식이 바뀌었다면 ChangePassword에서도 바꿔야 합니다.
+		"^[a-zA-Z0-9]+$", // Username Regex
+		"^[a-zA-Z0-9\\~\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\+\\=\\[\\]\\{\\}\\.\\,\\<\\>\\/\\?\\;\\:\\'\\\"\\\\\\|\\`]+$", // Password Regex
+	}
+	lenLR := [][]int{
+		{6, 30}, // Username Length
+		{6, 30}, // Password Length
 	}
 	res := &Response{8000, ""}
 	conf := config.Get()
@@ -98,9 +100,14 @@ func (h *AuthHandler) Login(c *gorn.Context) {
 	if err := c.BindJsonBody(body); err != nil {
 		return
 	}
-	// 정규식 체크를 합니다. 만약 비밀번호 길이 등 입력 제한 사항이 바뀌었더라도 통과될 수 있어야 합니다.
-	// 따라서 길이 검사만 하는 것을 권장합니다.
-	for i, v := range []string{body.Username, body.Password} {
+	bodyItems := []string{body.Username, body.Password}
+	for i, v := range bodyItems {
+		if err := c.AssertStrLen(v, lenLR[i][0], lenLR[i][1]); err != nil {
+			return
+		}
+	}
+	// Check Regex for Username, Password
+	for i, v := range bodyItems {
 		if err := c.AssertStrRegex(v, reg[i]); err != nil {
 			return
 		}
@@ -135,10 +142,11 @@ func (h *AuthHandler) Login(c *gorn.Context) {
 		c.SetCookie(cookie)
 		c.SetCookie(cookie2)
 		res.Token = token
+		c.SendJson(http.StatusOK, res)
 	} else {
 		res.Code = 8001
+		c.SendJson(http.StatusUnauthorized, res)
 	}
-	c.SendJson(http.StatusOK, res)
 }
 
 // 로그아웃 시킵니다.

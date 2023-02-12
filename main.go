@@ -30,8 +30,6 @@ func main() {
 
 	conf := config.Get()
 
-	rnlog.Debug("Pull Request Github Action Test")
-
 	// rn logger를 초기화 합니다.
 	err := rnlog.Init(conf.LogFilePath, conf.LogFile)
 	if err != nil {

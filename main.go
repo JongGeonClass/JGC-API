@@ -67,6 +67,7 @@ func main() {
 
 	router := router.New(
 		database.NewUser(db),
+		database.NewProduct(db),
 	)
 
 	rnlog.Info("JGC API server is running...")

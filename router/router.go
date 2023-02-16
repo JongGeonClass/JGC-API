@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/JongGeonClass/JGC-API/config"
 	"github.com/JongGeonClass/JGC-API/database"
 	"github.com/thak1411/gorn"
 )
@@ -10,6 +11,7 @@ func New(
 	userdb database.UserDatabase,
 	productdb database.ProductDatabase,
 ) *gorn.Router {
+	conf := config.Get()
 	router := gorn.NewRouter()
 
 	auth := NewAuth(userdb)
@@ -17,6 +19,14 @@ func New(
 
 	router.Extends("/api/auth", auth)
 	router.Extends("/api/product", product)
+
+	options := &gorn.RouterOptions{
+		AllowedOrigins:   conf.CorsOrigin,
+		AllowedHeaders:   []string{"*"},
+		MaxAge:           conf.MaxAge,
+		AllowCredentials: true,
+	}
+	router.SetOptions(options)
 
 	return router
 }

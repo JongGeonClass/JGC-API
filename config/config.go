@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -45,6 +46,15 @@ func getEnvInt(key string) int {
 // 	return 0
 // }
 
+func parseStringList(str string) []string {
+	spt := strings.Split(str, ",")
+	res := []string{}
+	for _, v := range spt {
+		res = append(res, strings.TrimSpace(v))
+	}
+	return res
+}
+
 // 환경변수를 불러옵니다.
 // Init("$(PWD)/default.env", "[$(PWD)/native.env | $(PWD)/test.env | $(PWD)/prod.env]") 처럼 넣으면 됩니다.
 // 메인에서 최초 한 번만 호출되어야 합니다.
@@ -59,6 +69,8 @@ func Init(env ...string) {
 	config.LogFile = getEnv("LOG_FILE")
 	config.Port = getEnvInt("PORT")
 	config.Domain = getEnv("DOMAIN")
+	config.MaxAge = getEnvInt("MAX_AGE")
+	config.CorsOrigin = parseStringList(getEnv("CORS_ORIGIN"))
 	config.Cookies.PublicSessionName = getEnv("PUBLIC_SESSION_NAME")
 	config.Cookies.SessionName = getEnv("SESSION_NAME")
 	config.Cookies.SessionTimeout = time.Hour * 24 * 7
@@ -71,6 +83,7 @@ func Init(env ...string) {
 	config.DB.Host = getEnv("DB_HOST")
 	config.DB.Port = getEnvInt("DB_PORT")
 	config.DB.Lifecycle = time.Hour * 7
+	config.DB.MaxRetry = getEnvInt("DB_MAX_RETRY")
 }
 
 // config 정보를 담을 객체입니다.
@@ -87,6 +100,13 @@ type Config struct {
 	// 돌아가고 있는 서버의 포트와 도메인입니다.
 	Port   int
 	Domain string
+
+	// 캐싱에 사용할 max age 입니다. 초 단위로 동작합니다.
+	MaxAge int
+
+	// 서버에서 허용알 CORS origin입니다.
+	// 여러 origin을 허용하려면 .env 파일에 콤마로 구분하여 입력해주세요.
+	CorsOrigin []string
 
 	// 브라우저 쿠키에 관련된 데이터입니다.
 	Cookies struct {
@@ -133,6 +153,9 @@ type Config struct {
 		// Mysql의 최대 커넥션 주기보다 짧아야 합니다.
 		// 기본 값은 8시간이므로 이보다 짧은 7시간으로 설정합니다.)
 		Lifecycle time.Duration
+
+		// 쿼리에 실패했을 때 자동으로 재 시도할 횟수입니다.
+		MaxRetry int
 	}
 }
 

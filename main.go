@@ -50,6 +50,7 @@ func main() {
 		PoolSize:  conf.DB.PoolSize,
 		MaxConn:   conf.DB.MaxConn,
 		Lifecycle: conf.DB.Lifecycle,
+		MaxRetry:  conf.DB.MaxRetry,
 	}); err != nil {
 		rnlog.Fatal("DB open Error: %+v\n", err)
 		return

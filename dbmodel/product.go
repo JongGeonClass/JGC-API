@@ -8,15 +8,16 @@ import (
 
 // 유저에게 보여줄 프로덕트 리스트에 들어갈 정보를 담은 테이블입니다.
 type PublicProduct struct {
-	Id            int64  `rnsql:"PRODUCT.id"  json:"id"`
-	BrandId       int64  `rnsql:"PRODUCT.brand_id"  json:"brand_id"`
-	BrandName     string `rnsql:"BRAND.name"  json:"brand_name"`
-	Name          string `rnsql:"PRODUCT.name"  json:"name"`
-	Price         int64  `rnsql:"PRODUCT.price"  json:"price"`
-	Amount        int64  `rnsql:"PRODUCT.amount"  json:"amount"`
-	TitleImageS3  string `rnsql:"PRODUCT.title_image_s3"  json:"title_image_s3"`
-	DescriptionS3 string `rnsql:"PRODUCT.description_s3"  json:"description_s3"`
-	CreatedTime   string `rnsql:"PRODUCT.created_time"  json:"created_time"`
+	Id            int64        `rnsql:"PRODUCT.id"  json:"id"`
+	BrandId       int64        `rnsql:"PRODUCT.brand_id"  json:"brand_id"`
+	BrandName     string       `rnsql:"BRAND.name"  json:"brand_name"`
+	Categories    CategoryList `rnsql:"GROUP_CONCAT(CATEGORY.name)"  json:"categories"`
+	Name          string       `rnsql:"PRODUCT.name"  json:"name"`
+	Price         int64        `rnsql:"PRODUCT.price"  json:"price"`
+	Amount        int64        `rnsql:"PRODUCT.amount"  json:"amount"`
+	TitleImageS3  string       `rnsql:"PRODUCT.title_image_s3"  json:"title_image_s3"`
+	DescriptionS3 string       `rnsql:"PRODUCT.description_s3"  json:"description_s3"`
+	CreatedTime   string       `rnsql:"PRODUCT.created_time"  json:"created_time"`
 }
 
 // 판매자가 판매할 상품 정보를 담은 테이블입니다.

@@ -81,6 +81,11 @@ func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize int) ([]*dbm
 		From("PRODUCT").
 		InnerJoin("BRAND").
 		On("PRODUCT.brand_id = BRAND.id").
+		InnerJoin("PRODUCT_CATEGORY_MAP").
+		On("PRODUCT_CATEGORY_MAP.product_id = PRODUCT.id").
+		InnerJoin("CATEGORY").
+		On("PRODUCT_CATEGORY_MAP.category_id = CATEGORY.id").
+		AddPlainQuery("GROUP BY PRODUCT.id").
 		OrderBy("PRODUCT.id").DESC().
 		LimitPage(int64(page), int64(pagesize))
 

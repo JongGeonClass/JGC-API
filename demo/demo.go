@@ -59,6 +59,22 @@ func Generate(
 		}
 	}
 
+	// 카테고리 데이터 생성
+	rnlog.Info("Generating demo categories...")
+	minCategoryId := int64(0)
+	for i := 1; i <= 9; i++ {
+		id, err := productdb.AddCategory(ctx, &dbmodel.Category{
+			Name: "카테고리" + strconv.Itoa(i),
+		})
+		if i == 1 {
+			minCategoryId = id
+		}
+		if err != nil {
+			rnlog.Error("Error while adding category: %v", err)
+			return err
+		}
+	}
+
 	// 브랜드 데이터 생성
 	rnlog.Info("Generating demo brands...")
 	minBrandId := int64(0)
@@ -78,8 +94,9 @@ func Generate(
 
 	// 데모 상품 추가
 	rnlog.Info("Generating demo products...")
+	minProductId := int64(0)
 	for i := 1; i <= 50; i++ {
-		_, err := productdb.AddProduct(ctx, &dbmodel.Product{
+		id, err := productdb.AddProduct(ctx, &dbmodel.Product{
 			BrandId:       int64(i%9 + int(minBrandId)),
 			Name:          "데모 상품" + strconv.Itoa(i),
 			Price:         rand.Int63(),
@@ -87,9 +104,27 @@ func Generate(
 			TitleImageS3:  "demo_image_s3_link",
 			DescriptionS3: "demo_description_s3_link",
 		})
+		if i == 1 {
+			minProductId = id
+		}
 		if err != nil {
 			rnlog.Error("Error while adding product: %v", err)
 			return err
+		}
+	}
+
+	// 데모 상품 카테고리 추가
+	rnlog.Info("Generating demo product categories...")
+	for i := 1; i <= 50; i++ {
+		for j := 1; j <= 2; j++ {
+			err := productdb.AddProductCategory(ctx, &dbmodel.ProductCategoryMap{
+				ProductId:  int64(i + int(minProductId) - 1),
+				CategoryId: int64((i+j)%9 + int(minCategoryId)),
+			})
+			if err != nil {
+				rnlog.Error("Error while adding product category: %v", err)
+				return err
+			}
 		}
 	}
 
@@ -103,6 +138,13 @@ func Remove(
 ) error {
 	ctx := context.Background()
 
+	// 상품 카테고리 데이터 삭제
+	rnlog.Info("Removing demo product categories...")
+	if err := productdb.DeleteAllProductCategoryMap(ctx); err != nil {
+		rnlog.Error("Error while deleting product category: %v", err)
+		return err
+	}
+
 	// 상품 데이터 삭제
 	rnlog.Info("Removing demo products...")
 	if err := productdb.DeleteAllProducts(ctx); err != nil {
@@ -114,6 +156,13 @@ func Remove(
 	rnlog.Info("Removing demo brands...")
 	if err := productdb.DeleteAllBrands(ctx); err != nil {
 		rnlog.Error("Error while deleting brand: %v", err)
+		return err
+	}
+
+	// 카테고리 데이터 삭제
+	rnlog.Info("Removing demo categories...")
+	if err := productdb.DeleteAllCategories(ctx); err != nil {
+		rnlog.Error("Error while deleting category: %v", err)
 		return err
 	}
 

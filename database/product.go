@@ -18,6 +18,10 @@ type ProductDatabase interface {
 	GetProductsCount(ctx context.Context) (int, error)
 	AddBrand(ctx context.Context, brand *dbmodel.Brand) (int64, error)
 	DeleteAllBrands(ctx context.Context) error
+	AddCategory(ctx context.Context, category *dbmodel.Category) (int64, error)
+	DeleteAllCategories(ctx context.Context) error
+	AddProductCategory(ctx context.Context, productCategoryMap *dbmodel.ProductCategoryMap) error
+	DeleteAllProductCategoryMap(ctx context.Context) error
 }
 
 // 상품 디비의 구현체입니다.
@@ -70,7 +74,6 @@ func (h *ProductDB) DeleteAllProducts(ctx context.Context) error {
 }
 
 // 상품 목록을 가져옵니다.
-//TODO: pagination 제대로 가져오기
 func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, error) {
 	result := []*dbmodel.PublicProduct{}
 	sql := gorn.NewSql().
@@ -122,6 +125,47 @@ func (h *ProductDB) DeleteAllBrands(ctx context.Context) error {
 	sql := gorn.NewSql().
 		DeleteFrom("BRAND").
 		Where("id > ?", -1)
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 새로운 카테고리를 추가합니다.
+// 이후 추가된 카테고리 아이디를 반환합니다.
+func (h *ProductDB) AddCategory(ctx context.Context, category *dbmodel.Category) (int64, error) {
+	return h.InsertWithLastId(ctx, "CATEGORY", category)
+}
+
+// 모든 카테고리를 삭제합니다.
+func (h *ProductDB) DeleteAllCategories(ctx context.Context) error {
+	sql := gorn.NewSql().
+		DeleteFrom("CATEGORY").
+		Where("id > ?", -1)
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 프로덕트에 카테고리를 연결합니다.
+func (h *ProductDB) AddProductCategory(ctx context.Context, productCategoryMap *dbmodel.ProductCategoryMap) error {
+	return h.Insert(ctx, "PRODUCT_CATEGORY_MAP", productCategoryMap)
+}
+
+// 모든 프로덕트에 연결된 카테고리를 삭제합니다.
+func (h *ProductDB) DeleteAllProductCategoryMap(ctx context.Context) error {
+	sql := gorn.NewSql().
+		DeleteFrom("PRODUCT_CATEGORY_MAP").
+		Where("product_id > ?", -1)
 	res, err := h.Exec(ctx, sql)
 	if err != nil {
 		return err

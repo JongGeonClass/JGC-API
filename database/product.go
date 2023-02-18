@@ -28,6 +28,14 @@ type ProductDatabase interface {
 	GetCartProduct(ctx context.Context, userId, productId int64) (*dbmodel.Cart, error)
 	UpdateCart(ctx context.Context, cart *dbmodel.Cart) error
 	DeleteCartProduct(ctx context.Context, userId, productId int64) error
+	AddReview(ctx context.Context, review *dbmodel.Review) (int64, error)
+	CheckReviewExists(ctx context.Context, reviewId int64) (bool, error)
+	GetReviewList(ctx context.Context, productId int64) ([]*dbmodel.PublicReview, error)
+	DeleteAllReviews(ctx context.Context) error
+	AddProductStatistics(ctx context.Context, productStat *dbmodel.ProductStatistics) error
+	GetProductStatistics(ctx context.Context, productId int64) (*dbmodel.ProductStatistics, error)
+	UpdateProductStatistics(ctx context.Context, productStat *dbmodel.ProductStatistics) error
+	DeleteAllProductStatistics(ctx context.Context) error
 }
 
 // 상품 디비의 구현체입니다.
@@ -269,6 +277,118 @@ func (h *ProductDB) DeleteCartProduct(ctx context.Context, userId, productId int
 		DeleteFrom("CART").
 		Where("user_id = ?", userId).
 		Where("product_id = ?", productId)
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 새로운 리뷰를 등록합니다.
+// 이후 등록된 리뷰 아이디를 반환합니다.
+func (h *ProductDB) AddReview(ctx context.Context, review *dbmodel.Review) (int64, error) {
+	ntime := time.Now()
+	review.CreatedTime = ntime
+	review.UpdatedTime = ntime
+	return h.InsertWithLastId(ctx, "REVIEW", review)
+}
+
+// 해당 상품에 리뷰가 존재하는지 확인합니다.
+func (h *ProductDB) CheckReviewExists(ctx context.Context, reviewId int64) (bool, error) {
+	type ReviewCount struct {
+		Count int `rnsql:"COUNT(*)"`
+	}
+	result := &ReviewCount{}
+	sql := gorn.NewSql().
+		Select(result).
+		From("REVIEW").
+		Where("id = ?", reviewId)
+	row := h.QueryRow(ctx, sql)
+	if err := h.ScanRow(row, result); err != nil {
+		return false, err
+	}
+	return result.Count > 0, nil
+}
+
+// 상품에 등록된 리뷰 리스트를 가져옵니다.
+func (h *ProductDB) GetReviewList(ctx context.Context, productId int64) ([]*dbmodel.PublicReview, error) {
+	result := []*dbmodel.PublicReview{}
+	sql := gorn.NewSql().
+		Select(&dbmodel.PublicReview{}).
+		From("REVIEW").
+		InnerJoin("USER").On("REVIEW.user_id = USER.id").
+		Where("REVIEW.product_id = ?", productId).
+		OrderBy("CASE WHEN REVIEW.parent_review_id > 0 THEN REVIEW.parent_review_id ELSE REVIEW.id END").DESC().
+		Comma().AddPlainQuery("REVIEW.is_parent").DESC().
+		Comma().AddPlainQuery("REVIEW.id").ASC()
+
+	rows, err := h.Query(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	if err := h.ScanRows(rows, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// 모든 리뷰를 삭제합니다.
+func (h *ProductDB) DeleteAllReviews(ctx context.Context) error {
+	sql := gorn.NewSql().
+		DeleteFrom("REVIEW").
+		Where("id > -1")
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 새로운 상품 통계를 등록합니다.
+func (h *ProductDB) AddProductStatistics(ctx context.Context, productStat *dbmodel.ProductStatistics) error {
+	return h.Insert(ctx, "PRODUCT_STATISTICS", productStat)
+}
+
+// 상품 통계 정보를 가져옵니다.
+func (h *ProductDB) GetProductStatistics(ctx context.Context, productId int64) (*dbmodel.ProductStatistics, error) {
+	result := &dbmodel.ProductStatistics{}
+	sql := gorn.NewSql().
+		Select(result).
+		From("PRODUCT_STATISTICS").
+		Where("product_id = ?", productId)
+	row := h.QueryRow(ctx, sql)
+	if err := h.ScanRow(row, result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// 상품 통계를 업데이트합니다.
+func (h *ProductDB) UpdateProductStatistics(ctx context.Context, productStat *dbmodel.ProductStatistics) error {
+	sql := gorn.NewSql().
+		Update("PRODUCT_STATISTICS", productStat).
+		Where("product_id = ?", productStat.ProductId)
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 모든 통계를 삭제합니다.
+func (h *ProductDB) DeleteAllProductStatistics(ctx context.Context) error {
+	sql := gorn.NewSql().
+		DeleteFrom("PRODUCT_STATISTICS").
+		Where("product_id > ?", -1)
 	res, err := h.Exec(ctx, sql)
 	if err != nil {
 		return err

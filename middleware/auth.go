@@ -6,6 +6,7 @@ import (
 	"github.com/JongGeonClass/JGC-API/model"
 	"github.com/JongGeonClass/JGC-API/util"
 	"github.com/thak1411/gorn"
+	"github.com/thak1411/rnlog"
 )
 
 type AuthMiddleware struct {
@@ -18,11 +19,13 @@ func (md *AuthMiddleware) TokenDecode(c *gorn.Context) {
 
 	token, err := c.GetCookie(conf.Cookies.SessionName)
 	if err != nil {
+		rnlog.Error("token decode cookie get error: %+v", err)
 		c.SendNotAuthorized()
 		return
 	}
 	tok, claims, err := util.AuthUserToken(token.Value, conf.Jwt.SecretKey)
 	if err != nil || !tok.Valid {
+		rnlog.Error("token decode validation error: %+v", err)
 		c.SendNotAuthorized()
 		return
 	}

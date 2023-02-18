@@ -102,8 +102,14 @@ func (uc *ProductUC) UpdateCartAmount(ctx context.Context, userId, productId, am
 }
 
 // 장바구니에서 상품을 삭제합니다.
+// 만약 장바구니에 상품이 없다면 무시합니다.
 func (uc *ProductUC) DeleteFromCart(ctx context.Context, userId, productId int64) error {
-	return uc.productdb.DeleteCartProduct(ctx, userId, productId)
+	if exists, err := uc.productdb.CheckCartHasProduct(ctx, userId, productId); err != nil {
+		return err
+	} else if exists {
+		return uc.productdb.DeleteCartProduct(ctx, userId, productId)
+	}
+	return nil
 }
 
 // Product Usecase를 반환합니다.

@@ -2,6 +2,7 @@ package demo
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"strconv"
 
@@ -104,8 +105,8 @@ func Generate(
 			Name:          "종건급 상품" + strconv.Itoa(i),
 			Price:         rand.Int63(),
 			Amount:        rand.Int63(),
-			TitleImageS3:  "demo_image_s3_link",
-			DescriptionS3: "demo_description_s3_link",
+			TitleImageS3:  fmt.Sprintf("https://jgc-product.s3.ap-northeast-2.amazonaws.com/title/%d.txt", i),
+			DescriptionS3: fmt.Sprintf("https://jgc-product.s3.ap-northeast-2.amazonaws.com/description/%d.txt", i),
 		})
 		if i == 1 {
 			minProductId = id

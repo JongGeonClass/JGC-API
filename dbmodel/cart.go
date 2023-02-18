@@ -10,7 +10,7 @@ import (
 type Cart struct {
 	UserId      int64     `rnsql:"user_id"  rntype:"INT"  rnopt:"NN"  FK:"USER.id"  json:"user_id"`
 	ProductId   int64     `rnsql:"product_id"  rntype:"INT"  rnopt:"NN"  FK:"PRODUCT.id"  json:"product_id"`
-	Amount      int64     `rnsql:"amount"  rntype:"INT"  rnopt:"NN"  json:"amount"`
+	Amount      int64     `rnsql:"amount"  rntype:"BIGINT"  rnopt:"NN"  json:"amount"`
 	CreatedTime time.Time `rnsql:"created_time"  rntype:"DATETIME"  rnopt:"NN"  json:"created_time"`
 	UpdatedTime time.Time `rnsql:"updated_time"  rntype:"DATETIME"  rnopt:"NN"  json:"updated_time"`
 }

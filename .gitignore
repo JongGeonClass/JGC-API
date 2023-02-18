@@ -4,3 +4,6 @@
 # secret data file
 config/**
 !config/config.go
+
+# demo s3 file
+demo/product/**

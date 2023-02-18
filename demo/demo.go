@@ -113,6 +113,21 @@ func Generate(
 		}
 	}
 
+	// 데모 통계 페이지 추가
+	rnlog.Info("Generating demo statistics pages...")
+	for i := 1; i <= 50; i++ {
+		err := productdb.AddProductStatistics(ctx, &dbmodel.ProductStatistics{
+			ProductId:      int64(i + int(minProductId) - 1),
+			ReviewCount:    0,
+			SumReviewScore: 0,
+			SoldQuantity:   0,
+		})
+		if err != nil {
+			rnlog.Error("Error while adding product statistics: %v", err)
+			return err
+		}
+	}
+
 	// 데모 상품 카테고리 추가
 	rnlog.Info("Generating demo product categories...")
 	for i := 1; i <= 50; i++ {
@@ -142,6 +157,13 @@ func Remove(
 	rnlog.Info("Removing demo product categories...")
 	if err := productdb.DeleteAllProductCategoryMap(ctx); err != nil {
 		rnlog.Error("Error while deleting product category: %v", err)
+		return err
+	}
+
+	// 상품 통계 데이터 삭제
+	rnlog.Info("Removing demo product statistics...")
+	if err := productdb.DeleteAllProductStatistics(ctx); err != nil {
+		rnlog.Error("Error while deleting product statistics: %v", err)
 		return err
 	}
 

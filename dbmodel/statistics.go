@@ -3,6 +3,7 @@ package dbmodel
 import "github.com/thak1411/gorn"
 
 // 상품에 대한 통계를 저장해주는 테이블입니다.
+//DOC: 항상 새로운 프로덕트를 만들 때 같이 만들어야 합니다.
 type ProductStatistics struct {
 	ProductId      int64 `rnsql:"product_id"  rntype:"INT"  rnopt:"PK NN"  FK:"PRODUCT.id"  json:"product_id"`
 	ReviewCount    int64 `rnsql:"review_count"  rntype:"INT"  rnopt:"NN"  json:"review_count"`

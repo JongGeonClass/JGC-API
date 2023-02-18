@@ -11,6 +11,7 @@ import (
 type ProductUsecase interface {
 	GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, int, error)
 	AddToCart(ctx context.Context, userId, productId, amount int64) error
+	UpdateCartAmount(ctx context.Context, userId, productId, amount int64) error
 }
 
 // Product Usecase의 구현체입니다.
@@ -77,7 +78,27 @@ func (uc *ProductUC) AddToCart(ctx context.Context, userId, productId, amount in
 	return err
 }
 
-// 장바구니에 상품을 삭제합니다.
+// 장바구니에 담긴 상품의 개수를 변경합니다.
+func (uc *ProductUC) UpdateCartAmount(ctx context.Context, userId, productId, amount int64) error {
+	err := uc.productdb.ExecTx(ctx, func(txdb database.ProductDatabase) error {
+		// 장바구니에 이미 상품이 담겨있는지 확인합니다.
+		if isExists, err := txdb.CheckCartHasProduct(ctx, userId, productId); err != nil {
+			return err
+		} else if !isExists {
+			// 존재하지 않는다면 무시합니다.
+			return nil
+		}
+		// 존재한다면, 개수를 변경합니다..
+		cart := &dbmodel.Cart{
+			UserId:    userId,
+			ProductId: productId,
+			Amount:    amount,
+		}
+		// 업데이트 된 개수를 반영합니다.
+		return txdb.UpdateCart(ctx, cart)
+	})
+	return err
+}
 
 // Product Usecase를 반환합니다.
 func NewProduct(

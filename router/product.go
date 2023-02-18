@@ -23,6 +23,7 @@ func NewProduct(
 
 	router.Get("/products", hd.GetProducts)
 	router.Post("/add-to-cart", decode, hd.AddToCart)
+	router.Post("/update-cart-amount", decode, hd.UpdateCartAmount)
 
 	return router
 }

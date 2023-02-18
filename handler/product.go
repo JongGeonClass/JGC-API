@@ -188,6 +188,29 @@ func (h *ProductHandler) AddReview(c *gorn.Context) {
 	c.SendJson(http.StatusOK, res)
 }
 
+// 리뷰 조회하기
+func (h *ProductHandler) GetReviews(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code    int                     `json:"code"`
+		Reviews []*dbmodel.PublicReview `json:"reviews"`
+	}
+	res := &Response{8000, nil}
+	ctx := c.GetContext()
+	productId := c.GetParamInt64("product_id", 0)
+	if err := c.Assert(productId > 0, "product_id must be greater than 0"); err != nil {
+		return
+	}
+	// 리뷰를 조회하는 로직을 실행합니다.
+	if reviews, err := h.uc.GetReviews(ctx, productId); err != nil {
+		rnlog.Error("get reviews error: %+v", err)
+		c.SendInternalServerError()
+		return
+	} else {
+		res.Reviews = reviews
+	}
+	c.SendJson(http.StatusOK, res)
+}
+
 // Product Handler를 반환합니다.
 func NewProduct(uc usecase.ProductUsecase) *ProductHandler {
 	return &ProductHandler{uc}

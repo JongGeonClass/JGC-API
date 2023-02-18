@@ -6,6 +6,18 @@ import (
 	"github.com/thak1411/gorn"
 )
 
+// 유저에게 보여줄 리뷰 리스트에 들어갈 정보를 담은 테이블입니다.
+type PublicReview struct {
+	Id          int64  `rnsql:"REVIEW.id"  json:"id"`
+	ProductId   int64  `rnsql:"REVIEW.product_id"  json:"product_id"`
+	UserId      int64  `rnsql:"REVIEW.user_id"  json:"user_id"`
+	Nickname    string `rnsql:"USER.nickname"  json:"nickname"`
+	Score       int64  `rnsql:"REVIEW.score"  json:"score"`
+	Content     string `rnsql:"REVIEW.content"  json:"content"`
+	IsParent    bool   `rnsql:"CASE WHEN REVIEW.parent_review_id > 0 THEN 0 ELSE 1 END AS is_parent"  json:"is_parent"`
+	CreatedTime string `rnsql:"REVIEW.created_time"  json:"created_time"`
+}
+
 // 유저가 작성한 리뷰를 담은 테이블입니다.
 type Review struct {
 	Id             int64     `rnsql:"id"  rntype:"INT"  rnopt:"PK NN UQ AI"  json:"id"`

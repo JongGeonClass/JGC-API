@@ -52,10 +52,13 @@ func Generate(
 		},
 	}
 	rnlog.Info("Generating demo users...")
-	for _, v := range users {
-		if _, err := userdb.AddUser(ctx, v); err != nil {
+	minUserId := int64(0)
+	for i, v := range users {
+		if id, err := userdb.AddUser(ctx, v); err != nil {
 			rnlog.Error("Error while adding user: %v", err)
 			return err
+		} else if i == 0 {
+			minUserId = id
 		}
 	}
 
@@ -64,7 +67,7 @@ func Generate(
 	minCategoryId := int64(0)
 	for i := 1; i <= 9; i++ {
 		id, err := productdb.AddCategory(ctx, &dbmodel.Category{
-			Name: "카테고리" + strconv.Itoa(i),
+			Name: "종건급 카테고리" + strconv.Itoa(i),
 		})
 		if i == 1 {
 			minCategoryId = id
@@ -80,7 +83,7 @@ func Generate(
 	minBrandId := int64(0)
 	for i := 1; i <= 9; i++ {
 		id, err := productdb.AddBrand(ctx, &dbmodel.Brand{
-			Name:  "브랜드" + strconv.Itoa(i),
+			Name:  "종건급 브랜드" + strconv.Itoa(i),
 			Email: "thak1411@gmail.com",
 		})
 		if i == 1 {
@@ -98,7 +101,7 @@ func Generate(
 	for i := 1; i <= 50; i++ {
 		id, err := productdb.AddProduct(ctx, &dbmodel.Product{
 			BrandId:       int64(i%9 + int(minBrandId)),
-			Name:          "데모 상품" + strconv.Itoa(i),
+			Name:          "종건급 상품" + strconv.Itoa(i),
 			Price:         rand.Int63(),
 			Amount:        rand.Int63(),
 			TitleImageS3:  "demo_image_s3_link",
@@ -110,6 +113,29 @@ func Generate(
 		if err != nil {
 			rnlog.Error("Error while adding product: %v", err)
 			return err
+		}
+	}
+
+	// 데모 리뷰 추가
+	rnlog.Info("Generating demo reviews...")
+	for i := 1; i <= 50; i++ {
+		reviewId := int64(0)
+		for j := 1; j <= 3; j++ {
+			review := &dbmodel.Review{
+				ProductId: int64(i + int(minProductId) - 1),
+				UserId:    int64((i+j)%3) + minUserId,
+				Score:     rand.Int63n(5) + 1,
+				Content:   "종건급 상품 진자 개지립니다. 꼭 사용해보세요!",
+			}
+			if j == 2 {
+				review.ParentReviewId = reviewId
+			}
+			id, err := productdb.AddReview(ctx, review)
+			reviewId = id
+			if err != nil {
+				rnlog.Error("Error while adding review: %v", err)
+				return err
+			}
 		}
 	}
 
@@ -164,6 +190,13 @@ func Remove(
 	rnlog.Info("Removing demo product statistics...")
 	if err := productdb.DeleteAllProductStatistics(ctx); err != nil {
 		rnlog.Error("Error while deleting product statistics: %v", err)
+		return err
+	}
+
+	// 모든 리뷰 삭제
+	rnlog.Info("Removing demo reviews...")
+	if err := productdb.DeleteAllReviews(ctx); err != nil {
+		rnlog.Error("Error while deleting review: %v", err)
 		return err
 	}
 

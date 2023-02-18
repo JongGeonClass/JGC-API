@@ -14,6 +14,7 @@ type ProductUsecase interface {
 	UpdateCartAmount(ctx context.Context, userId, productId, amount int64) error
 	DeleteFromCart(ctx context.Context, userId, productId int64) error
 	AddReview(ctx context.Context, userId, productId, score, parentReviewId int64, content *string) (int64, error)
+	GetReviews(ctx context.Context, productId int64) ([]*dbmodel.PublicReview, error)
 }
 
 // Product Usecase의 구현체입니다.
@@ -130,7 +131,7 @@ func (uc *ProductUC) AddReview(ctx context.Context, userId, productId, score, pa
 		}
 		// 부모 리뷰 아이디가 있다면 같은 상품 내에 존재하는 리뷰인지 확인합니다.
 		if parentReviewId != 0 {
-			if exists, err := txdb.CheckReviewExists(ctx, productId, parentReviewId); err != nil {
+			if exists, err := txdb.CheckReviewExists(ctx, parentReviewId); err != nil {
 				return err
 			} else if !exists {
 				// 존재하지 않는 리뷰라면 -2를 반환합니다.
@@ -162,6 +163,11 @@ func (uc *ProductUC) AddReview(ctx context.Context, userId, productId, score, pa
 		return txdb.UpdateProductStatistics(ctx, statistics)
 	})
 	return res, err
+}
+
+// 리뷰 리스트를 가져옵니다.
+func (uc *ProductUC) GetReviews(ctx context.Context, productId int64) ([]*dbmodel.PublicReview, error) {
+	return uc.productdb.GetReviewList(ctx, productId)
 }
 
 // Product Usecase를 반환합니다.

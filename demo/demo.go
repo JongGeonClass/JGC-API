@@ -121,13 +121,16 @@ func Generate(
 	rnlog.Info("Generating demo reviews...")
 	for i := 1; i <= 50; i++ {
 		reviewId := int64(0)
+		sumScore := int64(0)
 		for j := 1; j <= 3; j++ {
+			sc := rand.Int63n(5) + 1
 			review := &dbmodel.Review{
 				ProductId: int64(i + int(minProductId) - 1),
 				UserId:    int64((i+j)%3) + minUserId,
-				Score:     rand.Int63n(5) + 1,
+				Score:     sc,
 				Content:   "종건급 상품 진자 개지립니다. 꼭 사용해보세요!",
 			}
+			sumScore += sc
 			if j == 2 {
 				review.ParentReviewId = reviewId
 			}
@@ -138,22 +141,34 @@ func Generate(
 				return err
 			}
 		}
-	}
-
-	// 데모 통계 페이지 추가
-	rnlog.Info("Generating demo statistics pages...")
-	for i := 1; i <= 50; i++ {
-		err := productdb.AddProductStatistics(ctx, &dbmodel.ProductStatistics{
+		// 데모 통계 페이지 추가
+		statistics := &dbmodel.ProductStatistics{
 			ProductId:      int64(i + int(minProductId) - 1),
-			ReviewCount:    0,
-			SumReviewScore: 0,
+			ReviewCount:    3,
+			SumReviewScore: sumScore,
 			SoldQuantity:   0,
-		})
+		}
+		err := productdb.AddProductStatistics(ctx, statistics)
 		if err != nil {
 			rnlog.Error("Error while adding product statistics: %v", err)
 			return err
 		}
 	}
+
+	// 데모 통계 페이지 추가
+	// rnlog.Info("Generating demo statistics pages...")
+	// for i := 1; i <= 50; i++ {
+	// 	err := productdb.AddProductStatistics(ctx, &dbmodel.ProductStatistics{
+	// 		ProductId:      int64(i + int(minProductId) - 1),
+	// 		ReviewCount:    0,
+	// 		SumReviewScore: 0,
+	// 		SoldQuantity:   0,
+	// 	})
+	// 	if err != nil {
+	// 		rnlog.Error("Error while adding product statistics: %v", err)
+	// 		return err
+	// 	}
+	// }
 
 	// 데모 상품 카테고리 추가
 	rnlog.Info("Generating demo product categories...")

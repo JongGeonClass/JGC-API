@@ -103,7 +103,7 @@ func (h *ProductDB) GetPublicProduct(ctx context.Context, productId int64) (*dbm
 		Where("PRODUCT.id = ?", productId).
 		AddPlainQuery("GROUP BY PRODUCT.id")
 	row := h.QueryRow(ctx, sql)
-	if err := h.ScanRow(row, &result); err != nil {
+	if err := h.ScanRow(row, result); err != nil {
 		return nil, err
 	}
 	return result, nil

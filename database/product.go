@@ -16,12 +16,18 @@ type ProductDatabase interface {
 	DeleteAllProducts(ctx context.Context) error
 	GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, error)
 	GetProductsCount(ctx context.Context) (int, error)
+	CheckProductExists(ctx context.Context, productId int64) (bool, error)
 	AddBrand(ctx context.Context, brand *dbmodel.Brand) (int64, error)
 	DeleteAllBrands(ctx context.Context) error
 	AddCategory(ctx context.Context, category *dbmodel.Category) (int64, error)
 	DeleteAllCategories(ctx context.Context) error
 	AddProductCategory(ctx context.Context, productCategoryMap *dbmodel.ProductCategoryMap) error
 	DeleteAllProductCategoryMap(ctx context.Context) error
+	AddCart(ctx context.Context, cart *dbmodel.Cart) error
+	CheckCartHasProduct(ctx context.Context, userId, productId int64) (bool, error)
+	GetCartProduct(ctx context.Context, userId, productId int64) (*dbmodel.Cart, error)
+	UpdateCart(ctx context.Context, cart *dbmodel.Cart) error
+	DeleteCartProduct(ctx context.Context, userId, productId int64) error
 }
 
 // 상품 디비의 구현체입니다.
@@ -116,6 +122,23 @@ func (h *ProductDB) GetProductsCount(ctx context.Context) (int, error) {
 	return result.Count, nil
 }
 
+// 존재하는 상품인지 확인합니다.
+func (h *ProductDB) CheckProductExists(ctx context.Context, productId int64) (bool, error) {
+	type ProductCount struct {
+		Count int `rnsql:"COUNT(*)"`
+	}
+	result := &ProductCount{}
+	sql := gorn.NewSql().
+		Select(result).
+		From("PRODUCT").
+		Where("id = ?", productId)
+	row := h.QueryRow(ctx, sql)
+	if err := h.ScanRow(row, result); err != nil {
+		return false, err
+	}
+	return result.Count > 0, nil
+}
+
 // 새로운 브랜드를 추가합니다.
 // 이후 추가된 브랜드 아이디를 반환합니다.
 func (h *ProductDB) AddBrand(ctx context.Context, brand *dbmodel.Brand) (int64, error) {
@@ -171,6 +194,81 @@ func (h *ProductDB) DeleteAllProductCategoryMap(ctx context.Context) error {
 	sql := gorn.NewSql().
 		DeleteFrom("PRODUCT_CATEGORY_MAP").
 		Where("product_id > ?", -1)
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 장바구니에 상품을 추가합니다.
+func (h *ProductDB) AddCart(ctx context.Context, cart *dbmodel.Cart) error {
+	ntime := time.Now()
+	cart.CreatedTime = ntime
+	cart.UpdatedTime = ntime
+	return h.Insert(ctx, "CART", cart)
+}
+
+// 장바구니에 상품이 담겨있는지 확인합니다.
+func (h *ProductDB) CheckCartHasProduct(ctx context.Context, userId, productId int64) (bool, error) {
+	type CartCount struct {
+		Count int `rnsql:"COUNT(*)"`
+	}
+	result := &CartCount{}
+	sql := gorn.NewSql().
+		Select(result).
+		From("CART").
+		Where("user_id = ?", userId).
+		Where("product_id = ?", productId)
+	row := h.QueryRow(ctx, sql)
+	if err := h.ScanRow(row, result); err != nil {
+		return false, err
+	}
+	return result.Count > 0, nil
+}
+
+// 장바구니에 담긴 단일 상품 정보를 가져옵니다.
+func (h *ProductDB) GetCartProduct(ctx context.Context, userId, productId int64) (*dbmodel.Cart, error) {
+	result := &dbmodel.Cart{}
+	sql := gorn.NewSql().
+		Select(result).
+		From("CART").
+		Where("user_id = ?", userId).
+		Where("product_id = ?", productId)
+	row := h.QueryRow(ctx, sql)
+	if err := h.ScanRow(row, result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// 장바구니 정보를 업데이트합니다.
+func (h *ProductDB) UpdateCart(ctx context.Context, cart *dbmodel.Cart) error {
+	ntime := time.Now()
+	cart.UpdatedTime = ntime
+	sql := gorn.NewSql().
+		Update("CART", cart).
+		Where("user_id = ?", cart.UserId).
+		Where("product_id = ?", cart.ProductId)
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 장바구니에서 상품을 삭제합니다.
+func (h *ProductDB) DeleteCartProduct(ctx context.Context, userId, productId int64) error {
+	sql := gorn.NewSql().
+		DeleteFrom("CART").
+		Where("user_id = ?", userId).
+		Where("product_id = ?", productId)
 	res, err := h.Exec(ctx, sql)
 	if err != nil {
 		return err

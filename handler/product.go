@@ -71,6 +71,29 @@ func (h *ProductHandler) GetProducts(c *gorn.Context) {
 	c.SendJson(http.StatusOK, res)
 }
 
+// 장바구니에 담긴 상품 리스트를 가져옵니다.
+// 이 함수는 항상 인증된 사용자만 사용할 수 있도록 미들웨어에서만 호출해야 합니다.
+func (h *ProductHandler) GetCartProducts(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code  int                   `json:"code"`
+		Carts []*dbmodel.PublicCart `json:"carts"`
+	}
+	ctx := c.GetContext()
+	res := &Response{8000, nil}
+	conf := config.Get()
+	token := c.GetValue(conf.Cookies.SessionName).(model.AuthUserTokenClaims)
+
+	// 장바구니에 담긴 상품 리스트를 가져옵니다.
+	carts, err := h.uc.GetCartProducts(ctx, token.Id)
+	if err != nil {
+		rnlog.Error("products get error: %+v", err)
+		c.SendInternalServerError()
+		return
+	}
+	res.Carts = carts
+	c.SendJson(http.StatusOK, res)
+}
+
 // 장바구니에 상품을 담습니다.
 // 이 함수는 항상 인증된 사용자만 사용할 수 있도록 미들웨어에서만 호출해야 합니다.
 func (h *ProductHandler) AddToCart(c *gorn.Context) {

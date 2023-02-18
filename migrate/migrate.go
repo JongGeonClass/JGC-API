@@ -54,11 +54,11 @@ func MigrateAllReset(db *gorn.DB) error {
 
 func Migrate(db *gorn.DB) {
 	var err error
-	// err = MigrateAllReset(db)
-	// if err != nil {
-	// 	rnlog.Error("Migrate All Reset Error: %+v\n", err)
-	// 	return
-	// }
+	err = MigrateAllReset(db)
+	if err != nil {
+		rnlog.Error("Migrate All Reset Error: %+v\n", err)
+		return
+	}
 
 	tables, tableNames := dbmodel.GetTables()
 	indexes := dbmodel.GetIndexes()

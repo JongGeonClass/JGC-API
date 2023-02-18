@@ -114,6 +114,35 @@ func (h *ProductHandler) UpdateCartAmount(c *gorn.Context) {
 	c.SendJson(http.StatusOK, res)
 }
 
+// 장바구니에 등록된 상품 삭제
+// 이 함수는 항상 인증된 사용자만 사용할 수 있도록 미들웨어에서만 호출해야 합니다.
+func (h *ProductHandler) DeleteFromCart(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code int `json:"code"`
+	}
+	type Body struct { // Body 파라미터 타입
+		ProductId int64 `json:"product_id"`
+	}
+	res := &Response{8000}
+	ctx := c.GetContext()
+	body := &Body{}
+	conf := config.Get()
+	token := c.GetValue(conf.Cookies.SessionName).(model.AuthUserTokenClaims)
+	if err := c.BindJsonBody(body); err != nil { // 바디 바인딩
+		return
+	}
+	if err := c.Assert(body.ProductId > 0, "product_id must be greater than 0"); err != nil {
+		return
+	}
+	// 장바구니에 상품을 삭제하는 로직을 실행합니다.
+	if err := h.uc.DeleteFromCart(ctx, token.Id, body.ProductId); err != nil {
+		rnlog.Error("delete from cart error: %+v", err)
+		c.SendInternalServerError()
+		return
+	}
+	c.SendJson(http.StatusOK, res)
+}
+
 // Product Handler를 반환합니다.
 func NewProduct(uc usecase.ProductUsecase) *ProductHandler {
 	return &ProductHandler{uc}

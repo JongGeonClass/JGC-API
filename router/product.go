@@ -24,6 +24,7 @@ func NewProduct(
 	router.Get("/products", hd.GetProducts)
 	router.Post("/add-to-cart", decode, hd.AddToCart)
 	router.Post("/update-cart-amount", decode, hd.UpdateCartAmount)
+	router.Delete("/delete-cart-product", decode, hd.DeleteFromCart)
 
 	return router
 }

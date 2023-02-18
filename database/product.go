@@ -27,6 +27,7 @@ type ProductDatabase interface {
 	CheckCartHasProduct(ctx context.Context, userId, productId int64) (bool, error)
 	GetCartProduct(ctx context.Context, userId, productId int64) (*dbmodel.Cart, error)
 	UpdateCart(ctx context.Context, cart *dbmodel.Cart) error
+	DeleteCartProduct(ctx context.Context, userId, productId int64) error
 }
 
 // 상품 디비의 구현체입니다.
@@ -252,6 +253,22 @@ func (h *ProductDB) UpdateCart(ctx context.Context, cart *dbmodel.Cart) error {
 		Update("CART", cart).
 		Where("user_id = ?", cart.UserId).
 		Where("product_id = ?", cart.ProductId)
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 장바구니에서 상품을 삭제합니다.
+func (h *ProductDB) DeleteCartProduct(ctx context.Context, userId, productId int64) error {
+	sql := gorn.NewSql().
+		DeleteFrom("CART").
+		Where("user_id = ?", userId).
+		Where("product_id = ?", productId)
 	res, err := h.Exec(ctx, sql)
 	if err != nil {
 		return err

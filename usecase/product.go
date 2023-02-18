@@ -12,6 +12,7 @@ type ProductUsecase interface {
 	GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, int, error)
 	AddToCart(ctx context.Context, userId, productId, amount int64) error
 	UpdateCartAmount(ctx context.Context, userId, productId, amount int64) error
+	DeleteFromCart(ctx context.Context, userId, productId int64) error
 }
 
 // Product Usecase의 구현체입니다.
@@ -98,6 +99,11 @@ func (uc *ProductUC) UpdateCartAmount(ctx context.Context, userId, productId, am
 		return txdb.UpdateCart(ctx, cart)
 	})
 	return err
+}
+
+// 장바구니에서 상품을 삭제합니다.
+func (uc *ProductUC) DeleteFromCart(ctx context.Context, userId, productId int64) error {
+	return uc.productdb.DeleteCartProduct(ctx, userId, productId)
 }
 
 // Product Usecase를 반환합니다.

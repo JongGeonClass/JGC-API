@@ -24,6 +24,7 @@ type ProductDatabase interface {
 	DeleteAllCategories(ctx context.Context) error
 	AddProductCategory(ctx context.Context, productCategoryMap *dbmodel.ProductCategoryMap) error
 	DeleteAllProductCategoryMap(ctx context.Context) error
+	GetCartProducts(ctx context.Context, userId int64) ([]*dbmodel.PublicCart, error)
 	AddCart(ctx context.Context, cart *dbmodel.Cart) error
 	CheckCartHasProduct(ctx context.Context, userId, productId int64) (bool, error)
 	GetCartProduct(ctx context.Context, userId, productId int64) (*dbmodel.Cart, error)
@@ -240,6 +241,34 @@ func (h *ProductDB) AddCart(ctx context.Context, cart *dbmodel.Cart) error {
 	cart.CreatedTime = ntime
 	cart.UpdatedTime = ntime
 	return h.Insert(ctx, "CART", cart)
+}
+
+// 장바구니에 담긴 상품 리스트를 가져옵니다.
+func (h *ProductDB) GetCartProducts(ctx context.Context, userId int64) ([]*dbmodel.PublicCart, error) {
+	result := []*dbmodel.PublicCart{}
+	sql := gorn.NewSql().
+		Select(&dbmodel.PublicCart{}).
+		From("CART").
+		InnerJoin("PRODUCT").
+		On("CART.product_id = PRODUCT.id").
+		InnerJoin("BRAND").
+		On("PRODUCT.brand_id = BRAND.id").
+		InnerJoin("PRODUCT_CATEGORY_MAP").
+		On("PRODUCT_CATEGORY_MAP.product_id = PRODUCT.id").
+		InnerJoin("CATEGORY").
+		On("PRODUCT_CATEGORY_MAP.category_id = CATEGORY.id").
+		Where("CART.user_id = ?", userId).
+		AddPlainQuery("GROUP BY PRODUCT.id").
+		OrderBy("CART.id").ASC()
+	rows, err := h.Query(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	if err := h.ScanRows(rows, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // 장바구니에 상품이 담겨있는지 확인합니다.

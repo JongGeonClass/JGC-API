@@ -11,6 +11,7 @@ import (
 type ProductUsecase interface {
 	GetProduct(ctx context.Context, productId int64) (*dbmodel.PublicProduct, error)
 	GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, int, error)
+	GetCartProducts(ctx context.Context, userId int64) ([]*dbmodel.PublicCart, error)
 	AddToCart(ctx context.Context, userId, productId, amount int64) error
 	UpdateCartAmount(ctx context.Context, userId, productId, amount int64) error
 	DeleteFromCart(ctx context.Context, userId, productId int64) error
@@ -46,6 +47,11 @@ func (uc *ProductUC) GetProducts(ctx context.Context, page, pagesize int) ([]*db
 		return j
 	}
 	return products, max(productsCount-1, 0) / pagesize, nil
+}
+
+// 장바구니에 담긴 상품 리스트를 가져옵니다.
+func (uc *ProductUC) GetCartProducts(ctx context.Context, userId int64) ([]*dbmodel.PublicCart, error) {
+	return uc.productdb.GetCartProducts(ctx, userId)
 }
 
 // 장바구니에 상품을 추가합니다.

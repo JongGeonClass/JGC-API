@@ -14,6 +14,7 @@ type ProductDatabase interface {
 	ExecTx(ctx context.Context, fn func(txdb ProductDatabase) error) error
 	AddProduct(ctx context.Context, product *dbmodel.Product) (int64, error)
 	DeleteAllProducts(ctx context.Context) error
+	GetPublicProduct(ctx context.Context, productId int64) (*dbmodel.PublicProduct, error)
 	GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, error)
 	GetProductsCount(ctx context.Context) (int, error)
 	CheckProductExists(ctx context.Context, productId int64) (bool, error)
@@ -85,6 +86,27 @@ func (h *ProductDB) DeleteAllProducts(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+// 개별 상품 정보를 가져옵니다.
+func (h *ProductDB) GetPublicProduct(ctx context.Context, productId int64) (*dbmodel.PublicProduct, error) {
+	result := &dbmodel.PublicProduct{}
+	sql := gorn.NewSql().
+		Select(result).
+		From("PRODUCT").
+		InnerJoin("BRAND").
+		On("PRODUCT.brand_id = BRAND.id").
+		InnerJoin("PRODUCT_CATEGORY_MAP").
+		On("PRODUCT_CATEGORY_MAP.product_id = PRODUCT.id").
+		InnerJoin("CATEGORY").
+		On("PRODUCT_CATEGORY_MAP.category_id = CATEGORY.id").
+		Where("PRODUCT.id = ?", productId).
+		AddPlainQuery("GROUP BY PRODUCT.id")
+	row := h.QueryRow(ctx, sql)
+	if err := h.ScanRow(row, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // 상품 목록을 가져옵니다.

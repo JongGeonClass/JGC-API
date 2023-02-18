@@ -21,6 +21,7 @@ func NewProduct(
 
 	decode := md.TokenDecode
 
+	router.Get("/product", hd.GetProduct)
 	router.Get("/products", hd.GetProducts)
 	router.Post("/add-to-cart", decode, hd.AddToCart)
 	router.Post("/update-cart-amount", decode, hd.UpdateCartAmount)

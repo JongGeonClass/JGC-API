@@ -16,6 +16,30 @@ type ProductHandler struct {
 	uc usecase.ProductUsecase
 }
 
+// 개별 상품 정보 조회하기
+func (h *ProductHandler) GetProduct(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code    int                    `json:"code"`
+		Product *dbmodel.PublicProduct `json:"product"`
+	}
+	ctx := c.GetContext()
+	res := &Response{8000, nil}
+
+	productId := c.GetParamInt64("product_id", -1) // 상품 번호를 가져옵니다.
+	if err := c.Assert(productId >= 0, "id must be greater than or equal to 0"); err != nil {
+		return
+	}
+
+	product, err := h.uc.GetProduct(ctx, productId) // 상품 정보를 가져옵니다.
+	if err != nil {
+		rnlog.Error("products get error: %+v", err)
+		c.SendInternalServerError()
+		return
+	}
+	res.Product = product
+	c.SendJson(http.StatusOK, res)
+}
+
 // 상품 리스트 조회하기
 func (h *ProductHandler) GetProducts(c *gorn.Context) {
 	type Response struct { // 반환 타입

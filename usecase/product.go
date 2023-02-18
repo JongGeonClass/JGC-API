@@ -9,6 +9,7 @@ import (
 
 // Product Usecase의 인터페이스입니다.
 type ProductUsecase interface {
+	GetProduct(ctx context.Context, productId int64) (*dbmodel.PublicProduct, error)
 	GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, int, error)
 	AddToCart(ctx context.Context, userId, productId, amount int64) error
 	UpdateCartAmount(ctx context.Context, userId, productId, amount int64) error
@@ -21,6 +22,11 @@ type ProductUsecase interface {
 type ProductUC struct {
 	userdb    database.UserDatabase
 	productdb database.ProductDatabase
+}
+
+// 개별 상품 정보를 가져옵니다.
+func (uc *ProductUC) GetProduct(ctx context.Context, productId int64) (*dbmodel.PublicProduct, error) {
+	return uc.productdb.GetPublicProduct(ctx, productId)
 }
 
 // 상품 리스트를 가져옵니다.

@@ -344,7 +344,7 @@ func (h *ProductDB) GetReviewList(ctx context.Context, productId int64) ([]*dbmo
 		InnerJoin("USER").On("REVIEW.user_id = USER.id").
 		Where("REVIEW.product_id = ?", productId).
 		OrderBy("CASE WHEN REVIEW.parent_review_id > 0 THEN REVIEW.parent_review_id ELSE REVIEW.id END").DESC().
-		Comma().AddPlainQuery("REVIEW.is_parent").DESC().
+		Comma().AddPlainQuery("is_parent").DESC().
 		Comma().AddPlainQuery("REVIEW.id").ASC()
 
 	rows, err := h.Query(ctx, sql)

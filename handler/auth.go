@@ -124,7 +124,7 @@ func (h *AuthHandler) Login(c *gorn.Context) {
 		// 쿠키를 설정합니다.
 		cookie := &http.Cookie{
 			Name:     conf.Cookies.SessionName,
-			Domain:   conf.Domain,
+			Domain:   c.GetHeader("Origin"),
 			Path:     "/",
 			Expires:  time.Now().Add(conf.Cookies.SessionTimeout), // 쿠키 유효기간은 일주일입니다.
 			Value:    token,
@@ -134,7 +134,7 @@ func (h *AuthHandler) Login(c *gorn.Context) {
 		// 이 쿠키는 유저의 정보를 가져올 때 사용합니다.
 		cookie2 := &http.Cookie{
 			Name:    conf.Cookies.PublicSessionName,
-			Domain:  conf.Domain,
+			Domain:  c.GetHeader("Origin"),
 			Path:    "/",
 			Expires: time.Now().Add(conf.Cookies.SessionTimeout), // 쿠키 유효기간은 일주일입니다.
 			Value:   strings.Split(token, ".")[1],

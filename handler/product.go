@@ -45,22 +45,25 @@ func (h *ProductHandler) GetProducts(c *gorn.Context) {
 	type Response struct { // 반환 타입
 		Code        int                      `json:"code"`
 		Products    []*dbmodel.PublicProduct `json:"products"`
-		MaxPagesize int                      `json:"max_pagesize"`
+		MaxPagesize int64                    `json:"max_pagesize"`
 	}
 	ctx := c.GetContext()
 	res := &Response{8000, nil, 1}
 
-	page := c.GetParamInt("page", 0) // 검색할 페이지 번호를 가져옵니다.
+	page := c.GetParamInt64("page", 0) // 검색할 페이지 번호를 가져옵니다.
 	if err := c.Assert(page >= 0, "page must be greater than or equal to 0"); err != nil {
 		return
 	}
-	pagesize := c.GetParamInt("pagesize", -1) // 검색할 페이지 길이를 가져옵니다.
-	if err := c.AssertIntRange(pagesize, 1, 100); err != nil {
+	pagesize := c.GetParamInt64("pagesize", -1) // 검색할 페이지 길이를 가져옵니다.
+	if err := c.AssertInt64Range(pagesize, 1, 100); err != nil {
 		return
 	}
-
+	categoryId := c.GetParamInt64("category_id", 0) // 검색할 카테고리 번호를 가져옵니다.
+	if err := c.Assert(categoryId >= 0, "category_id must be greater than or equal to 0"); err != nil {
+		return
+	}
 	// 상품 리스트를 가져옵니다.
-	products, maxPagesize, err := h.uc.GetProducts(ctx, page, pagesize)
+	products, maxPagesize, err := h.uc.GetProducts(ctx, page, pagesize, categoryId)
 	if err != nil {
 		rnlog.Error("products get error: %+v", err)
 		c.SendInternalServerError()
@@ -254,6 +257,25 @@ func (h *ProductHandler) GetReviews(c *gorn.Context) {
 		return
 	} else {
 		res.Reviews = reviews
+	}
+	c.SendJson(http.StatusOK, res)
+}
+
+// 모든 카테고리 리스트를 가져옵니다.
+func (h *ProductHandler) GetCategories(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code       int                 `json:"code"`
+		Categories []*dbmodel.Category `json:"categories"`
+	}
+	res := &Response{8000, nil}
+	ctx := c.GetContext()
+	// 카테고리 리스트를 가져오는 로직을 실행합니다.
+	if categories, err := h.uc.GetCategories(ctx); err != nil {
+		rnlog.Error("get categories error: %+v", err)
+		c.SendInternalServerError()
+		return
+	} else {
+		res.Categories = categories
 	}
 	c.SendJson(http.StatusOK, res)
 }

@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/JongGeonClass/JGC-API/dbmodel"
@@ -15,8 +16,8 @@ type ProductDatabase interface {
 	AddProduct(ctx context.Context, product *dbmodel.Product) (int64, error)
 	DeleteAllProducts(ctx context.Context) error
 	GetPublicProduct(ctx context.Context, productId int64) (*dbmodel.PublicProduct, error)
-	GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, error)
-	GetProductsCount(ctx context.Context) (int, error)
+	GetProducts(ctx context.Context, page, pagesize, categoryId int64) ([]*dbmodel.PublicProduct, error)
+	GetProductsCount(ctx context.Context, categoryId int64) (int64, error)
 	CheckProductExists(ctx context.Context, productId int64) (bool, error)
 	AddBrand(ctx context.Context, brand *dbmodel.Brand) (int64, error)
 	DeleteAllBrands(ctx context.Context) error
@@ -38,6 +39,7 @@ type ProductDatabase interface {
 	GetProductStatistics(ctx context.Context, productId int64) (*dbmodel.ProductStatistics, error)
 	UpdateProductStatistics(ctx context.Context, productStat *dbmodel.ProductStatistics) error
 	DeleteAllProductStatistics(ctx context.Context) error
+	GetAllCategories(ctx context.Context) ([]*dbmodel.Category, error)
 }
 
 // 상품 디비의 구현체입니다.
@@ -111,7 +113,7 @@ func (h *ProductDB) GetPublicProduct(ctx context.Context, productId int64) (*dbm
 }
 
 // 상품 목록을 가져옵니다.
-func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, error) {
+func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize, categoryId int64) ([]*dbmodel.PublicProduct, error) {
 	result := []*dbmodel.PublicProduct{}
 	sql := gorn.NewSql().
 		Select(&dbmodel.PublicProduct{}).
@@ -122,8 +124,11 @@ func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize int) ([]*dbm
 		On("PRODUCT_CATEGORY_MAP.product_id = PRODUCT.id").
 		InnerJoin("CATEGORY").
 		On("PRODUCT_CATEGORY_MAP.category_id = CATEGORY.id").
-		AddPlainQuery("GROUP BY PRODUCT.id").
-		OrderBy("PRODUCT.id").DESC().
+		GroupBy("PRODUCT.id")
+	if categoryId != 0 {
+		sql.Having("GROUP_CONCAT(CATEGORY.id) LIKE ?", fmt.Sprintf("%%%d%%", categoryId))
+	}
+	sql.OrderBy("PRODUCT.id").DESC().
 		LimitPage(int64(page), int64(pagesize))
 
 	rows, err := h.Query(ctx, sql)
@@ -138,15 +143,26 @@ func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize int) ([]*dbm
 }
 
 // 상품 개수를 가져옵니다.
-func (h *ProductDB) GetProductsCount(ctx context.Context) (int, error) {
+func (h *ProductDB) GetProductsCount(ctx context.Context, categoryId int64) (int64, error) {
 	type ProductsCount struct {
-		Count int `rnsql:"COUNT(*)"`
+		Count int64 `rnsql:"COUNT(t.id)"`
 	}
 	result := &ProductsCount{}
 	sql := gorn.NewSql().
-		Select(result).
+		AddPlainQuery("SELECT PRODUCT.id AS id").
 		From("PRODUCT")
-	row := h.QueryRow(ctx, sql)
+	if categoryId != 0 {
+		sql.InnerJoin("PRODUCT_CATEGORY_MAP").
+			On("PRODUCT_CATEGORY_MAP.product_id = PRODUCT.id").
+			InnerJoin("CATEGORY").
+			On("PRODUCT_CATEGORY_MAP.category_id = CATEGORY.id").
+			GroupBy("PRODUCT.id").
+			Having("GROUP_CONCAT(CATEGORY.id) LIKE ?", fmt.Sprintf("%%%d%%", categoryId))
+	}
+	tsql := gorn.NewSql().
+		Select(result).
+		FromSql(sql).As("t")
+	row := h.QueryRow(ctx, tsql)
 	if err := h.ScanRow(row, result); err != nil {
 		return 0, err
 	}
@@ -448,6 +464,22 @@ func (h *ProductDB) DeleteAllProductStatistics(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+// 모든 카테고리를 가져옵니다.
+func (h *ProductDB) GetAllCategories(ctx context.Context) ([]*dbmodel.Category, error) {
+	result := []*dbmodel.Category{}
+	sql := gorn.NewSql().
+		Select(&dbmodel.Category{}).
+		From("CATEGORY")
+	rows, err := h.Query(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	if err := h.ScanRows(rows, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // 새로운 디비 객체를 연결합니다.

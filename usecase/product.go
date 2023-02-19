@@ -10,13 +10,14 @@ import (
 // Product Usecase의 인터페이스입니다.
 type ProductUsecase interface {
 	GetProduct(ctx context.Context, productId int64) (*dbmodel.PublicProduct, error)
-	GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, int, error)
+	GetProducts(ctx context.Context, page, pagesize, categoryId int64) ([]*dbmodel.PublicProduct, int64, error)
 	GetCartProducts(ctx context.Context, userId int64) ([]*dbmodel.PublicCart, error)
 	AddToCart(ctx context.Context, userId, productId, amount int64) error
 	UpdateCartAmount(ctx context.Context, userId, productId, amount int64) error
 	DeleteFromCart(ctx context.Context, userId, productId int64) error
 	AddReview(ctx context.Context, userId, productId, score, parentReviewId int64, content *string) (int64, error)
 	GetReviews(ctx context.Context, productId int64) ([]*dbmodel.PublicReview, error)
+	GetCategories(ctx context.Context) ([]*dbmodel.Category, error)
 }
 
 // Product Usecase의 구현체입니다.
@@ -31,16 +32,16 @@ func (uc *ProductUC) GetProduct(ctx context.Context, productId int64) (*dbmodel.
 }
 
 // 상품 리스트를 가져옵니다.
-func (uc *ProductUC) GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, int, error) {
-	products, err := uc.productdb.GetProducts(ctx, page, pagesize)
+func (uc *ProductUC) GetProducts(ctx context.Context, page, pagesize, categoryId int64) ([]*dbmodel.PublicProduct, int64, error) {
+	products, err := uc.productdb.GetProducts(ctx, page, pagesize, categoryId)
 	if err != nil {
 		return nil, 0, err
 	}
-	productsCount, err := uc.productdb.GetProductsCount(ctx)
+	productsCount, err := uc.productdb.GetProductsCount(ctx, categoryId)
 	if err != nil {
 		return nil, 0, err
 	}
-	max := func(i, j int) int {
+	max := func(i, j int64) int64 {
 		if i > j {
 			return i
 		}
@@ -180,6 +181,11 @@ func (uc *ProductUC) AddReview(ctx context.Context, userId, productId, score, pa
 // 리뷰 리스트를 가져옵니다.
 func (uc *ProductUC) GetReviews(ctx context.Context, productId int64) ([]*dbmodel.PublicReview, error) {
 	return uc.productdb.GetReviewList(ctx, productId)
+}
+
+// 카테고리 리스트를 가져옵니다.
+func (uc *ProductUC) GetCategories(ctx context.Context) ([]*dbmodel.Category, error) {
+	return uc.productdb.GetAllCategories(ctx)
 }
 
 // Product Usecase를 반환합니다.

@@ -17,6 +17,7 @@ type ProductUsecase interface {
 	DeleteFromCart(ctx context.Context, userId, productId int64) error
 	AddReview(ctx context.Context, userId, productId, score, parentReviewId int64, content *string) (int64, error)
 	GetReviews(ctx context.Context, productId int64) ([]*dbmodel.PublicReview, error)
+	GetCategories(ctx context.Context) ([]*dbmodel.Category, error)
 }
 
 // Product Usecase의 구현체입니다.
@@ -180,6 +181,11 @@ func (uc *ProductUC) AddReview(ctx context.Context, userId, productId, score, pa
 // 리뷰 리스트를 가져옵니다.
 func (uc *ProductUC) GetReviews(ctx context.Context, productId int64) ([]*dbmodel.PublicReview, error) {
 	return uc.productdb.GetReviewList(ctx, productId)
+}
+
+// 카테고리 리스트를 가져옵니다.
+func (uc *ProductUC) GetCategories(ctx context.Context) ([]*dbmodel.Category, error) {
+	return uc.productdb.GetAllCategories(ctx)
 }
 
 // Product Usecase를 반환합니다.

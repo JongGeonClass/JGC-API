@@ -258,6 +258,25 @@ func (h *ProductHandler) GetReviews(c *gorn.Context) {
 	c.SendJson(http.StatusOK, res)
 }
 
+// 모든 카테고리 리스트를 가져옵니다.
+func (h *ProductHandler) GetCategories(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code       int                 `json:"code"`
+		Categories []*dbmodel.Category `json:"categories"`
+	}
+	res := &Response{8000, nil}
+	ctx := c.GetContext()
+	// 카테고리 리스트를 가져오는 로직을 실행합니다.
+	if categories, err := h.uc.GetCategories(ctx); err != nil {
+		rnlog.Error("get categories error: %+v", err)
+		c.SendInternalServerError()
+		return
+	} else {
+		res.Categories = categories
+	}
+	c.SendJson(http.StatusOK, res)
+}
+
 // Product Handler를 반환합니다.
 func NewProduct(uc usecase.ProductUsecase) *ProductHandler {
 	return &ProductHandler{uc}

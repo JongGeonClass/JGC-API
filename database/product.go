@@ -38,6 +38,7 @@ type ProductDatabase interface {
 	GetProductStatistics(ctx context.Context, productId int64) (*dbmodel.ProductStatistics, error)
 	UpdateProductStatistics(ctx context.Context, productStat *dbmodel.ProductStatistics) error
 	DeleteAllProductStatistics(ctx context.Context) error
+	GetAllCategories(ctx context.Context) ([]*dbmodel.Category, error)
 }
 
 // 상품 디비의 구현체입니다.
@@ -448,6 +449,22 @@ func (h *ProductDB) DeleteAllProductStatistics(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+// 모든 카테고리를 가져옵니다.
+func (h *ProductDB) GetAllCategories(ctx context.Context) ([]*dbmodel.Category, error) {
+	result := []*dbmodel.Category{}
+	sql := gorn.NewSql().
+		Select(&dbmodel.Category{}).
+		From("CATEGORY")
+	rows, err := h.Query(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	if err := h.ScanRows(rows, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // 새로운 디비 객체를 연결합니다.

@@ -161,14 +161,14 @@ func (h *AuthHandler) Logout(c *gorn.Context) {
 	// 쿠키를 삭제합니다.
 	cookie := &http.Cookie{
 		Name:   conf.Cookies.SessionName,
-		Domain: conf.Domain,
+		Domain: c.GetHeader("Origin"),
 		Path:   "/",
 		MaxAge: -1,
 	}
 	// 퍼블릭 쿠키도 삭제합니다.
 	cookie2 := &http.Cookie{
 		Name:   conf.Cookies.PublicSessionName,
-		Domain: conf.Domain,
+		Domain: c.GetHeader("Origin"),
 		Path:   "/",
 		MaxAge: -1,
 	}

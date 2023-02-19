@@ -68,7 +68,8 @@ func Generate(
 	minCategoryId := int64(0)
 	for i := 1; i <= 9; i++ {
 		id, err := productdb.AddCategory(ctx, &dbmodel.Category{
-			Name: "종건급 카테고리" + strconv.Itoa(i),
+			Name:        "종건급 카테고리" + strconv.Itoa(i),
+			Description: "종건급 카테고리" + strconv.Itoa(i) + "에 대한 설명입니다.",
 		})
 		if i == 1 {
 			minCategoryId = id

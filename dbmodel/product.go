@@ -11,7 +11,7 @@ type PublicProduct struct {
 	Id            int64        `rnsql:"PRODUCT.id"  json:"id"`
 	BrandId       int64        `rnsql:"PRODUCT.brand_id"  json:"brand_id"`
 	BrandName     string       `rnsql:"BRAND.name"  json:"brand_name"`
-	Categories    CategoryList `rnsql:"GROUP_CONCAT(CATEGORY.name)"  json:"categories"`
+	Categories    CategoryList `rnsql:"CONCAT('[', GROUP_CONCAT('{\"id\":', CATEGORY.id, ',\"name\":\"', CATEGORY.name, '\",\"description\":\"', CATEGORY.description, '\"}'), ']')"  json:"categories"`
 	Name          string       `rnsql:"PRODUCT.name"  json:"name"`
 	Price         int64        `rnsql:"PRODUCT.price"  json:"price"`
 	Amount        int64        `rnsql:"PRODUCT.amount"  json:"amount"`

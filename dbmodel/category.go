@@ -1,30 +1,29 @@
 package dbmodel
 
 import (
+	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/thak1411/gorn"
 )
 
 // GROUP_CONCAT으로 category 리스트를 가져올 때 사용할 객체입니다.
-type CategoryList []string
+type CategoryList []Category
 
 // DB에서 Scan할 때 struct 로 변환해줍니다.
 func (c *CategoryList) Scan(v interface{}) error {
-	var pstring string
+	var pbyte []byte
 	switch w := v.(type) {
 	case []byte:
-		pstring = string(w)
+		pbyte = w
 	case string:
-		pstring = w
+		pbyte = []byte(w)
 	case nil:
 		return nil
 	default:
 		return fmt.Errorf("unsupported type: %v", w)
 	}
-	*c = CategoryList(strings.Split(pstring, ","))
-	return nil
+	return json.Unmarshal(pbyte, c)
 }
 
 // 미리 정의된 카테고리를 담아놓을 테이블입니다.

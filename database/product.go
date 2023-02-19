@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/JongGeonClass/JGC-API/dbmodel"
@@ -15,8 +16,8 @@ type ProductDatabase interface {
 	AddProduct(ctx context.Context, product *dbmodel.Product) (int64, error)
 	DeleteAllProducts(ctx context.Context) error
 	GetPublicProduct(ctx context.Context, productId int64) (*dbmodel.PublicProduct, error)
-	GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, error)
-	GetProductsCount(ctx context.Context) (int, error)
+	GetProducts(ctx context.Context, page, pagesize, categoryId int64) ([]*dbmodel.PublicProduct, error)
+	GetProductsCount(ctx context.Context, categoryId int64) (int64, error)
 	CheckProductExists(ctx context.Context, productId int64) (bool, error)
 	AddBrand(ctx context.Context, brand *dbmodel.Brand) (int64, error)
 	DeleteAllBrands(ctx context.Context) error
@@ -112,7 +113,7 @@ func (h *ProductDB) GetPublicProduct(ctx context.Context, productId int64) (*dbm
 }
 
 // 상품 목록을 가져옵니다.
-func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize int) ([]*dbmodel.PublicProduct, error) {
+func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize, categoryId int64) ([]*dbmodel.PublicProduct, error) {
 	result := []*dbmodel.PublicProduct{}
 	sql := gorn.NewSql().
 		Select(&dbmodel.PublicProduct{}).
@@ -123,8 +124,11 @@ func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize int) ([]*dbm
 		On("PRODUCT_CATEGORY_MAP.product_id = PRODUCT.id").
 		InnerJoin("CATEGORY").
 		On("PRODUCT_CATEGORY_MAP.category_id = CATEGORY.id").
-		AddPlainQuery("GROUP BY PRODUCT.id").
-		OrderBy("PRODUCT.id").DESC().
+		GroupBy("PRODUCT.id")
+	if categoryId != 0 {
+		sql.Having("GROUP_CONCAT(CATEGORY.id) LIKE ?", fmt.Sprintf("%%%d%%", categoryId))
+	}
+	sql.OrderBy("PRODUCT.id").DESC().
 		LimitPage(int64(page), int64(pagesize))
 
 	rows, err := h.Query(ctx, sql)
@@ -139,15 +143,26 @@ func (h *ProductDB) GetProducts(ctx context.Context, page, pagesize int) ([]*dbm
 }
 
 // 상품 개수를 가져옵니다.
-func (h *ProductDB) GetProductsCount(ctx context.Context) (int, error) {
+func (h *ProductDB) GetProductsCount(ctx context.Context, categoryId int64) (int64, error) {
 	type ProductsCount struct {
-		Count int `rnsql:"COUNT(*)"`
+		Count int64 `rnsql:"COUNT(t.id)"`
 	}
 	result := &ProductsCount{}
 	sql := gorn.NewSql().
-		Select(result).
+		AddPlainQuery("SELECT PRODUCT.id AS id").
 		From("PRODUCT")
-	row := h.QueryRow(ctx, sql)
+	if categoryId != 0 {
+		sql.InnerJoin("PRODUCT_CATEGORY_MAP").
+			On("PRODUCT_CATEGORY_MAP.product_id = PRODUCT.id").
+			InnerJoin("CATEGORY").
+			On("PRODUCT_CATEGORY_MAP.category_id = CATEGORY.id").
+			GroupBy("PRODUCT.id").
+			Having("GROUP_CONCAT(CATEGORY.id) LIKE ?", fmt.Sprintf("%%%d%%", categoryId))
+	}
+	tsql := gorn.NewSql().
+		Select(result).
+		FromSql(sql).As("t")
+	row := h.QueryRow(ctx, tsql)
 	if err := h.ScanRow(row, result); err != nil {
 		return 0, err
 	}

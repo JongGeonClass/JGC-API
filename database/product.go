@@ -45,6 +45,7 @@ type ProductDatabase interface {
 	GetPbvOption(ctx context.Context, userId int64) (*dbmodel.PbvOption, error)
 	UpdatePbvOption(ctx context.Context, pbvOption *dbmodel.PbvOption) error
 	DeletePbvOption(ctx context.Context, userId int64) error
+	GetBrandsByUser(ctx context.Context, userId int64) ([]*dbmodel.Brand, error)
 }
 
 // 상품 디비의 구현체입니다.
@@ -556,6 +557,23 @@ func (h *ProductDB) DeletePbvOption(ctx context.Context, userId int64) error {
 		return err
 	}
 	return nil
+}
+
+// 유저에게 등록된 브랜드 리스트를 가져옵니다.
+func (h *ProductDB) GetBrandsByUser(ctx context.Context, userId int64) ([]*dbmodel.Brand, error) {
+	result := []*dbmodel.Brand{}
+	sql := gorn.NewSql().
+		Select(&dbmodel.Brand{}).
+		From("BRAND").
+		Where("user_id = ?", userId)
+	rows, err := h.Query(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	if err := h.ScanRows(rows, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // 새로운 디비 객체를 연결합니다.

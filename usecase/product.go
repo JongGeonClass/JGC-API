@@ -23,6 +23,7 @@ type ProductUsecase interface {
 	GetPbvOption(ctx context.Context, userId int64) (string, error)
 	UpdatePbvOption(ctx context.Context, userId int64, dataStr string) (int64, error)
 	DeletePbvOption(ctx context.Context, userId int64) (int64, error)
+	GetBrands(ctx context.Context, userId int64) ([]*dbmodel.Brand, error)
 }
 
 // Product Usecase의 구현체입니다.
@@ -290,6 +291,11 @@ func (uc *ProductUC) DeletePbvOption(ctx context.Context, userId int64) (int64, 
 		return nil
 	})
 	return res, err
+}
+
+// 유저가 운영하고 있는 브랜드 목록을 반환합니다.
+func (uc *ProductUC) GetBrands(ctx context.Context, userId int64) ([]*dbmodel.Brand, error) {
+	return uc.productdb.GetBrandsByUser(ctx, userId)
 }
 
 // Product Usecase를 반환합니다.

@@ -34,6 +34,7 @@ func NewProduct(
 	router.Get("/pbv", decode, hd.GetPbvOption)
 	router.Post("update-pbv", decode, hd.UpdatePbvOption)
 	router.Delete("/delete-pbv", decode, hd.DeletePbvOption)
+	router.Get("/brands", decode, hd.GetBrands)
 
 	return router
 }

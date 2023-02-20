@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/JongGeonClass/JGC-API/database"
 	"github.com/JongGeonClass/JGC-API/dbmodel"
@@ -18,6 +19,10 @@ type ProductUsecase interface {
 	AddReview(ctx context.Context, userId, productId, score, parentReviewId int64, content *string) (int64, error)
 	GetReviews(ctx context.Context, productId int64) ([]*dbmodel.PublicReview, error)
 	GetCategories(ctx context.Context) ([]*dbmodel.Category, error)
+	AddPbvOption(ctx context.Context, userId int64, dataStr string) (int64, error)
+	GetPbvOption(ctx context.Context, userId int64) (string, error)
+	UpdatePbvOption(ctx context.Context, userId int64, dataStr string) (int64, error)
+	DeletePbvOption(ctx context.Context, userId int64) (int64, error)
 }
 
 // Product Usecase의 구현체입니다.
@@ -186,6 +191,105 @@ func (uc *ProductUC) GetReviews(ctx context.Context, productId int64) ([]*dbmode
 // 카테고리 리스트를 가져옵니다.
 func (uc *ProductUC) GetCategories(ctx context.Context) ([]*dbmodel.Category, error) {
 	return uc.productdb.GetAllCategories(ctx)
+}
+
+// 새로운 pbv 옵션을 추가합니다.
+// 이후 생성된 pvb 옵션 id를 반환합니다.
+// 이미 옵션을 가지고 있는 유저라면 -1을 반환합니다.
+func (uc *ProductUC) AddPbvOption(ctx context.Context, userId int64, dataStr string) (int64, error) {
+	dest := dbmodel.DataJson{}
+	if err := json.Unmarshal([]byte(dataStr), &dest); err != nil {
+		return 0, err
+	}
+	res := int64(0)
+	err := uc.productdb.ExecTx(ctx, func(txdb database.ProductDatabase) error {
+		// 이미 옵션을 가지고 있는 유저라면 -1을 반환합니다.
+		if exists, err := txdb.CheckPbvOptionExists(ctx, userId); err != nil {
+			return err
+		} else if exists {
+			res = -1
+			return nil
+		}
+		// 옵션을 추가합니다.
+		if id, err := txdb.AddPbvOption(ctx, &dbmodel.PbvOption{
+			UserId: userId,
+			Data:   dest,
+		}); err != nil {
+			return err
+		} else {
+			res = id
+		}
+		return nil
+	})
+	return res, err
+}
+
+// pbv 옵션을 가져옵니다.
+// 존재하지 않는 옵션을 가져오려고 할 때 ""을 반환합니다.
+func (uc *ProductUC) GetPbvOption(ctx context.Context, userId int64) (string, error) {
+	if exists, err := uc.productdb.CheckPbvOptionExists(ctx, userId); err != nil {
+		return "", err
+	} else if !exists {
+		return "", nil
+	}
+	option, err := uc.productdb.GetPbvOption(ctx, userId)
+	if err != nil {
+		return "", err
+	}
+	pbyte, err := json.Marshal(option.Data)
+	if err != nil {
+		return "", err
+	}
+	return string(pbyte), nil
+}
+
+// pbv 옵션을 업데이트합니다.
+// 존재하지 않는 옵션을 업데이트하려고 할 때 -1을 반환합니다.
+func (uc *ProductUC) UpdatePbvOption(ctx context.Context, userId int64, dataStr string) (int64, error) {
+	dest := dbmodel.DataJson{}
+	if err := json.Unmarshal([]byte(dataStr), &dest); err != nil {
+		return 0, err
+	}
+	res := int64(0)
+	err := uc.productdb.ExecTx(ctx, func(txdb database.ProductDatabase) error {
+		// 옵션을 가지고 있지 않은 유저라면 -1을 반환합니다.
+		if exists, err := txdb.CheckPbvOptionExists(ctx, userId); err != nil {
+			return err
+		} else if !exists {
+			res = -1
+			return nil
+		}
+		// 옵션을 업데이트합니다.
+		if err := txdb.UpdatePbvOption(ctx, &dbmodel.PbvOption{
+			UserId: userId,
+			Data:   dest,
+		}); err != nil {
+			return err
+		}
+		return nil
+	})
+	return res, err
+}
+
+// pbv 옵션을 삭제합니다.
+// 존재하지 않는 옵션을 삭제하려고 할 때 -1을 반환합니다.
+func (uc *ProductUC) DeletePbvOption(ctx context.Context, userId int64) (int64, error) {
+	res := int64(0)
+	err := uc.productdb.ExecTx(ctx, func(txdb database.ProductDatabase) error {
+		// 옵션을 가지고 있지 않은 유저라면 -1을 반환합니다.
+		if exists, err := txdb.CheckPbvOptionExists(ctx, userId); err != nil {
+			return err
+		} else if !exists {
+			res = -1
+			return nil
+		}
+		// 옵션을 삭제합니다.
+		if err := txdb.DeletePbvOption(ctx, userId); err != nil {
+			return err
+		}
+		return nil
+	})
+	return res, err
 }
 
 // Product Usecase를 반환합니다.

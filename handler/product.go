@@ -280,6 +280,107 @@ func (h *ProductHandler) GetCategories(c *gorn.Context) {
 	c.SendJson(http.StatusOK, res)
 }
 
+// pbv 옵션을 추가합니다.
+// 이 함수는 항상 인증된 사용자만 사용할 수 있도록 미들웨어에서만 호출해야 합니다.
+func (h *ProductHandler) AddPbvOption(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code int `json:"code"`
+	}
+	type Body struct { // Body 파라미터 타입
+		Data string `json:"data"`
+	}
+	res := &Response{8000}
+	ctx := c.GetContext()
+	body := &Body{}
+	conf := config.Get()
+	token := c.GetValue(conf.Cookies.SessionName).(model.AuthUserTokenClaims)
+	if err := c.BindJsonBody(body); err != nil { // 바디 바인딩
+		return
+	}
+	// 옵션을 추가하는 로직을 실행합니다.
+	if id, err := h.uc.AddPbvOption(ctx, token.Id, body.Data); err != nil {
+		rnlog.Error("add pbv option error: %+v", err)
+		c.SendInternalServerError()
+		return
+	} else if id == -1 { // 이미 옵션이 존재합니다.
+		res.Code = 8001
+	}
+	c.SendJson(http.StatusOK, res)
+}
+
+// 등록된 pbv 옵션을 가져옵니다.
+// 이 함수는 항상 인증된 사용자만 사용할 수 있도록 미들웨어에서만 호출해야 합니다.
+func (h *ProductHandler) GetPbvOption(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code int    `json:"code"`
+		Data string `json:"data"`
+	}
+	res := &Response{8000, ""}
+	ctx := c.GetContext()
+	conf := config.Get()
+	token := c.GetValue(conf.Cookies.SessionName).(model.AuthUserTokenClaims)
+	// 옵션을 가져오는 로직을 실행합니다.
+	if data, err := h.uc.GetPbvOption(ctx, token.Id); err != nil {
+		rnlog.Error("get pbv option error: %+v", err)
+		c.SendInternalServerError()
+		return
+	} else if data == "" { // 옵션이 존재하지 않습니다.
+		res.Code = 8001
+	} else {
+		res.Data = data
+	}
+	c.SendJson(http.StatusOK, res)
+}
+
+// 등록된 pbv 옵션을 업데이트합니다.
+// 이 함수는 항상 인증된 사용자만 사용할 수 있도록 미들웨어에서만 호출해야 합니다.
+func (h *ProductHandler) UpdatePbvOption(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code int `json:"code"`
+	}
+	type Body struct { // Body 파라미터 타입
+		Data string `json:"data"`
+	}
+	res := &Response{8000}
+	ctx := c.GetContext()
+	body := &Body{}
+	conf := config.Get()
+	token := c.GetValue(conf.Cookies.SessionName).(model.AuthUserTokenClaims)
+	if err := c.BindJsonBody(body); err != nil { // 바디 바인딩
+		return
+	}
+	// 옵션을 업데이트하는 로직을 실행합니다.
+	if id, err := h.uc.UpdatePbvOption(ctx, token.Id, body.Data); err != nil {
+		rnlog.Error("update pbv option error: %+v", err)
+		c.SendInternalServerError()
+		return
+	} else if id == -1 { // 옵션이 존재하지 않습니다.
+		res.Code = 8001
+	}
+	c.SendJson(http.StatusOK, res)
+}
+
+// 등록된 pbv 옵션을 삭제합니다.
+// 이 함수는 항상 인증된 사용자만 사용할 수 있도록 미들웨어에서만 호출해야 합니다.
+func (h *ProductHandler) DeletePbvOption(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code int `json:"code"`
+	}
+	res := &Response{8000}
+	ctx := c.GetContext()
+	conf := config.Get()
+	token := c.GetValue(conf.Cookies.SessionName).(model.AuthUserTokenClaims)
+	// 옵션을 삭제하는 로직을 실행합니다.
+	if id, err := h.uc.DeletePbvOption(ctx, token.Id); err != nil {
+		rnlog.Error("delete pbv option error: %+v", err)
+		c.SendInternalServerError()
+		return
+	} else if id == -1 { // 옵션이 존재하지 않습니다.
+		res.Code = 8001
+	}
+	c.SendJson(http.StatusOK, res)
+}
+
 // Product Handler를 반환합니다.
 func NewProduct(uc usecase.ProductUsecase) *ProductHandler {
 	return &ProductHandler{uc}

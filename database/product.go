@@ -40,6 +40,11 @@ type ProductDatabase interface {
 	UpdateProductStatistics(ctx context.Context, productStat *dbmodel.ProductStatistics) error
 	DeleteAllProductStatistics(ctx context.Context) error
 	GetAllCategories(ctx context.Context) ([]*dbmodel.Category, error)
+	AddPbvOption(ctx context.Context, pbvOption *dbmodel.PbvOption) (int64, error)
+	CheckPbvOptionExists(ctx context.Context, userId int64) (bool, error)
+	GetPbvOption(ctx context.Context, userId int64) (*dbmodel.PbvOption, error)
+	UpdatePbvOption(ctx context.Context, pbvOption *dbmodel.PbvOption) error
+	DeletePbvOption(ctx context.Context, userId int64) error
 }
 
 // 상품 디비의 구현체입니다.
@@ -480,6 +485,77 @@ func (h *ProductDB) GetAllCategories(ctx context.Context) ([]*dbmodel.Category, 
 		return nil, err
 	}
 	return result, nil
+}
+
+// 새로운 pbv 옵션을 등록합니다.
+// 이후 등록된 옵션 아이디를 반환합니다.
+func (h *ProductDB) AddPbvOption(ctx context.Context, pbvOption *dbmodel.PbvOption) (int64, error) {
+	ntime := time.Now()
+	pbvOption.CreatedTime = ntime
+	pbvOption.UpdatedTime = ntime
+	return h.InsertWithLastId(ctx, "PBV_OPTION", pbvOption)
+}
+
+// 유저가 pvb 옵션을 가지고 있는지 확인합니다.
+func (h *ProductDB) CheckPbvOptionExists(ctx context.Context, userId int64) (bool, error) {
+	type PbvOptionCount struct {
+		Count int64 `rnsql:"COUNT(*)"`
+	}
+	result := &PbvOptionCount{}
+	sql := gorn.NewSql().
+		Select(result).
+		From("PBV_OPTION").
+		Where("user_id = ?", userId)
+	row := h.QueryRow(ctx, sql)
+	if err := h.ScanRow(row, result); err != nil {
+		return false, err
+	}
+	return result.Count > 0, nil
+}
+
+// 유저가 가지고 있는 PBV 옵션을 가져옵니다.
+func (h *ProductDB) GetPbvOption(ctx context.Context, userId int64) (*dbmodel.PbvOption, error) {
+	result := &dbmodel.PbvOption{}
+	sql := gorn.NewSql().
+		Select(result).
+		From("PBV_OPTION").
+		Where("user_id = ?", userId)
+	row := h.QueryRow(ctx, sql)
+	if err := h.ScanRow(row, result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// pbv 옵션을 업데이트합니다.
+func (h *ProductDB) UpdatePbvOption(ctx context.Context, pbvOption *dbmodel.PbvOption) error {
+	pbvOption.UpdatedTime = time.Now()
+	sql := gorn.NewSql().
+		Update("PBV_OPTION", pbvOption).
+		Where("user_id = ?", pbvOption.UserId)
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// pbv 옵션을 삭제합니다.
+func (h *ProductDB) DeletePbvOption(ctx context.Context, userId int64) error {
+	sql := gorn.NewSql().
+		DeleteFrom("PBV_OPTION").
+		Where("user_id = ?", userId)
+	res, err := h.Exec(ctx, sql)
+	if err != nil {
+		return err
+	}
+	if _, err := res.RowsAffected(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // 새로운 디비 객체를 연결합니다.

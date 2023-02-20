@@ -30,6 +30,10 @@ func NewProduct(
 	router.Post("/add-review", decode, hd.AddReview)
 	router.Get("/reviews", hd.GetReviews)
 	router.Get("/categories", hd.GetCategories)
+	router.Post("/add-pbv", decode, hd.AddPbvOption)
+	router.Get("/pbv", decode, hd.GetPbvOption)
+	router.Post("update-pbv", decode, hd.UpdatePbvOption)
+	router.Delete("/delete-pbv", decode, hd.DeletePbvOption)
 
 	return router
 }

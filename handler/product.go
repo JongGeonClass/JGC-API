@@ -381,6 +381,28 @@ func (h *ProductHandler) DeletePbvOption(c *gorn.Context) {
 	c.SendJson(http.StatusOK, res)
 }
 
+// 유저가 운영중인 브랜드 리스트를 가져옵니다.
+// 이 함수는 항상 인증된 사용자만 사용할 수 있도록 미들웨어에서만 호출해야 합니다.
+func (h *ProductHandler) GetBrands(c *gorn.Context) {
+	type Response struct { // 반환 타입
+		Code   int              `json:"code"`
+		Brands []*dbmodel.Brand `json:"brands"`
+	}
+	res := &Response{8000, nil}
+	ctx := c.GetContext()
+	conf := config.Get()
+	token := c.GetValue(conf.Cookies.SessionName).(model.AuthUserTokenClaims)
+	// 브랜드 리스트를 가져오는 로직을 실행합니다.
+	if brands, err := h.uc.GetBrands(ctx, token.Id); err != nil {
+		rnlog.Error("get brands error: %+v", err)
+		c.SendInternalServerError()
+		return
+	} else {
+		res.Brands = brands
+	}
+	c.SendJson(http.StatusOK, res)
+}
+
 // Product Handler를 반환합니다.
 func NewProduct(uc usecase.ProductUsecase) *ProductHandler {
 	return &ProductHandler{uc}

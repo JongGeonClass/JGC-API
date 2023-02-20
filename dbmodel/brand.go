@@ -9,6 +9,7 @@ import (
 // 브랜드 정보를 담은 테이블입니다.
 type Brand struct {
 	Id          int64     `rnsql:"id"  rntype:"INT"  rnopt:"PK NN UQ AI"  json:"id"`
+	UserId      int64     `rnsql:"user_id"  rntype:"INT"  rnopt:"NN"  FK:"USER.id"  json:"user_id"`
 	Name        string    `rnsql:"name"  rntype:"VARCHAR(200)"  rnopt:"NN"  json:"name"`
 	Email       string    `rnsql:"email"  rntype:"VARCHAR(200)"  rnopt:"NN"  json:"email"`
 	CreatedTime time.Time `rnsql:"created_time"  rntype:"DATETIME"  rnopt:"NN"  json:"created_time"`

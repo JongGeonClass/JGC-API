@@ -85,8 +85,9 @@ func Generate(
 	minBrandId := int64(0)
 	for i := 1; i <= 9; i++ {
 		id, err := productdb.AddBrand(ctx, &dbmodel.Brand{
-			Name:  "종건급 브랜드" + strconv.Itoa(i),
-			Email: "thak1411@gmail.com",
+			UserId: int64(i%2) + minUserId,
+			Name:   "종건급 브랜드" + strconv.Itoa(i),
+			Email:  "thak1411@gmail.com",
 		})
 		if i == 1 {
 			minBrandId = id

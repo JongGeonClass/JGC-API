@@ -30,15 +30,15 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ap-northeast-2
+        aws-region: us-east-2
         
     - name: upload to S3
-      run: aws s3 cp --region ap-northeast-2 $GITHUB_WORKSPACE/jgc_api.tar.gz s3://jgcdeploy
+      run: aws s3 cp --region us-east-2 $GITHUB_WORKSPACE/jgc_api.tar.gz s3://jgc-deploy
   
     - name: deploy with AWS codeDeploy
       run: aws deploy create-deployment
-        --application-name github-action
-        --deployment-group-name github-action-group
+        --application-name jgc
+        --deployment-group-name jgc-api
         --file-exists-behavior OVERWRITE
-        --s3-location bucket=jgcdeploy,bundleType=tgz,key=jgc_api.tar.gz
-        --region ap-northeast-2
+        --s3-location bucket=jgc-deploy,bundleType=tgz,key=jgc_api.tar.gz
+        --region us-east-2

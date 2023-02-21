@@ -303,7 +303,7 @@ func (h *ProductDB) CheckCartHasProduct(ctx context.Context, userId, productId i
 		Select(result).
 		From("CART").
 		Where("user_id = ?", userId).
-		Where("product_id = ?", productId)
+		And("product_id = ?", productId)
 	row := h.QueryRow(ctx, sql)
 	if err := h.ScanRow(row, result); err != nil {
 		return false, err
@@ -318,7 +318,7 @@ func (h *ProductDB) GetCartProduct(ctx context.Context, userId, productId int64)
 		Select(result).
 		From("CART").
 		Where("user_id = ?", userId).
-		Where("product_id = ?", productId)
+		And("product_id = ?", productId)
 	row := h.QueryRow(ctx, sql)
 	if err := h.ScanRow(row, result); err != nil {
 		return nil, err
@@ -333,7 +333,7 @@ func (h *ProductDB) UpdateCart(ctx context.Context, cart *dbmodel.Cart) error {
 	sql := gorn.NewSql().
 		Update("CART", cart).
 		Where("user_id = ?", cart.UserId).
-		Where("product_id = ?", cart.ProductId)
+		And("product_id = ?", cart.ProductId)
 	res, err := h.Exec(ctx, sql)
 	if err != nil {
 		return err
@@ -349,7 +349,7 @@ func (h *ProductDB) DeleteCartProduct(ctx context.Context, userId, productId int
 	sql := gorn.NewSql().
 		DeleteFrom("CART").
 		Where("user_id = ?", userId).
-		Where("product_id = ?", productId)
+		And("product_id = ?", productId)
 	res, err := h.Exec(ctx, sql)
 	if err != nil {
 		return err

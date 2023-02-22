@@ -21,6 +21,7 @@ type PublicCart struct {
 
 // 유저가 상품(프로덕트)을 담아놓은 장바구니 정보를 담은 N:M 맵입니다.
 type Cart struct {
+	Id          int64     `rnsql:"id"  rntype:"INT"  rnopt:"PK NN AI"  json:"id"`
 	UserId      int64     `rnsql:"user_id"  rntype:"INT"  rnopt:"NN"  FK:"USER.id"  json:"user_id"`
 	ProductId   int64     `rnsql:"product_id"  rntype:"INT"  rnopt:"NN"  FK:"PRODUCT.id"  json:"product_id"`
 	Amount      int64     `rnsql:"amount"  rntype:"BIGINT"  rnopt:"NN"  json:"amount"`

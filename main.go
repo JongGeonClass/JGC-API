@@ -8,7 +8,6 @@ import (
 
 	"github.com/JongGeonClass/JGC-API/config"
 	"github.com/JongGeonClass/JGC-API/database"
-	"github.com/JongGeonClass/JGC-API/demo"
 	"github.com/JongGeonClass/JGC-API/migrate"
 	"github.com/JongGeonClass/JGC-API/router"
 	"github.com/JongGeonClass/JGC-API/util"
@@ -65,23 +64,23 @@ func main() {
 		return
 	}
 
-	// 데모 데이터를 삭제합니다.
-	if err := demo.Remove(
-		database.NewUser(db),
-		database.NewProduct(db),
-	); err != nil {
-		rnlog.Error("Failed to remove demo data: %+v", err)
-		return
-	}
+	// // 데모 데이터를 삭제합니다.
+	// if err := demo.Remove(
+	// 	database.NewUser(db),
+	// 	database.NewProduct(db),
+	// ); err != nil {
+	// 	rnlog.Error("Failed to remove demo data: %+v", err)
+	// 	return
+	// }
 
-	// 데모 데이터를 생성합니다.
-	if err := demo.Generate(
-		database.NewUser(db),
-		database.NewProduct(db),
-	); err != nil {
-		rnlog.Error("Failed to generate demo data: %+v", err)
-		return
-	}
+	// // 데모 데이터를 생성합니다.
+	// if err := demo.Generate(
+	// 	database.NewUser(db),
+	// 	database.NewProduct(db),
+	// ); err != nil {
+	// 	rnlog.Error("Failed to generate demo data: %+v", err)
+	// 	return
+	// }
 
 	router := router.New(
 		database.NewUser(db),

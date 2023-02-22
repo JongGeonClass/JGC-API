@@ -130,10 +130,10 @@ func Generate(
 	}
 	productName := []string{
 		"Mobis 4K HUD - VK473824", "Mobis Super Fast Navigation - SUR39482", "Mobis High Quality Speaker - FJJS48374", "Mobis Miller Chair - FN2847184",
-		"Mobis Very Soft Carpet - SHJF284719", "Mobis Ultra Comfortable Sheat - AOT38972", "Mobis Best Driver Hadle - VJG837592", "Mobis Malon Diffuser - VJG837592",
-		"Mobis Cool Air Freshener - VJG837592", "Mobis Logo Sticker - KLIFJ3847294", "Kia 4K HUD - FJ24783", "Kia Super Fast Navigation - FJSF384571",
+		"Mobis Very Soft Carpet - SHJF284719", "Mobis Ultra Comfortable Sheat - AOT38972", "Mobis Best Driver Handle - VJG837592", "Mobis Malon Diffuser - VJG837592",
+		"Mobis Key Ring - VJG837592", "Mobis Logo - KLIFJ3847294", "Kia 4K HUD - FJ24783", "Kia Super Fast Navigation - FJSF384571",
 		"Kia High Quality Speaker - JFIE385729", "Kia Miller Chair - JGKS38472", "Kia Very Soft Carpet - JHIKS348724", "Kia Ultra Comfortable Sheat - GFJ3548724",
-		"Kia Best Driver Hadle - SFD2587", "Kia Malon Diffuser - JGIS58276", "Kia Cool Air Freshener - JHI34872", "Kia Logo Sticker - OITU39571",
+		"Kia Best Driver Handle - SFD2587", "Kia Malon Diffuser - JGIS58276", "Kia Key Ring - JHI34872", "Kia Logo - OITU39571",
 	}
 	for i := 1; i <= 20; i++ {
 		if _, err := productdb.AddProduct(ctx, &dbmodel.Product{
@@ -142,7 +142,7 @@ func Generate(
 			Name:          productName[i-1],
 			Price:         int64(rand.Int31n(1000000) + 10000),
 			Amount:        int64(rand.Int31n(10000) + 1),
-			TitleImageS3:  fmt.Sprintf("https://jgc-product-bucket.s3.us-east-2.amazonaws.com/title/%d.png", i),
+			TitleImageS3:  fmt.Sprintf("https://jgc-product-bucket.s3.us-east-2.amazonaws.com/title/%d.jpg", i),
 			DescriptionS3: fmt.Sprintf("https://jgc-product-bucket.s3.us-east-2.amazonaws.com/description/%d.txt", i),
 		}); err != nil {
 			rnlog.Error("Error while adding product: %v", err)

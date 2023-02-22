@@ -152,14 +152,14 @@ func Generate(
 
 	// 데모 리뷰 추가
 	rnlog.Info("Generating demo reviews...")
-	reviewUser := []int64{1, 2, 3}
+	reviewUser := []int64{4, 5, 6}
 	reviewContent := []string{"좋은 상품 배달 잘 받았습니다.\n포장 상태도 양호하고 배달도 아주 빠르게 잘 도착했습니다.\n\n제품 퀄리티도 매우 좋아서 잘 사용하겠습니다. 감사합니다.",
-		"감사합니다. 잘 사용하겠습니다.", "test"}
+		"저도 위 댓글 내용에 공감합니다. 감사합니다. 잘 사용하겠습니다.", "test"}
 	for i := 1; i <= 20; i++ {
 		reviewId := int64(0)
 		sumScore := int64(0)
 		for j := 1; j <= 3; j++ {
-			sc := rand.Int63n(5) + 3
+			sc := rand.Int63n(3) + 3
 			if j == 1 {
 				sc = 5
 			}

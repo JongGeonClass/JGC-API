@@ -23,7 +23,7 @@ func NewProduct(
 
 	router.Get("/product", hd.GetProduct)
 	router.Get("/products", hd.GetProducts)
-	router.Get("/carts", hd.GetCartProducts)
+	router.Get("/carts", decode, hd.GetCartProducts)
 	router.Post("/add-to-cart", decode, hd.AddToCart)
 	router.Post("/update-cart-amount", decode, hd.UpdateCartAmount)
 	router.Delete("/delete-cart-product", decode, hd.DeleteFromCart)
